@@ -1,0 +1,13 @@
+{
+  "name": "fbr-bot",
+  "version": "1.0.0",
+  "description": "discord fortnite bot",
+  "main": "index.js",
+  "author": "Waddlesworth",
+  "license": "MIT",
+  "dependencies": {
+    "canvas": "^2.0.0-alpha.12",
+    "discord.js": "^11.3.2",
+    "fortnite-api": "^2.10.0"
+  }
+}
