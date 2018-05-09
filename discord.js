@@ -44,6 +44,20 @@ client.on('message', msg => {
             msg.channel.send(attach);
         });
     }
+    if (parts[0] == '!broadcast' && msg.author.id == '229419335930609664') {
+        if (parts[1] == 'shop') {
+            PostShopMessage();
+            return;
+        }
+        var channelList = subbedChannels.map(v => v.channel);
+        parts.shift();
+        var broadcastMessage = parts.join(" ");
+        client.channels.forEach(channel => {
+            if (channelList.includes(channel.id)) {
+                channel.send(broadcastMessage);
+            }
+        });
+    }
 });
 
 var targetPost = false;
@@ -59,7 +73,13 @@ function PostShopMessage() {
     GetTextMessage().then(message => {
         var channelList = subbedChannels.filter(v => v.type == 'text').map(v => v.channel);
         client.channels.forEach(channel => {
-            channel.send(message);
+            if (channelList.includes(channel.id)) {
+                channel.send(message).catch(error => {
+                    // Probably missing permissions
+                    subbedChannels = subbedChannels.filter(v => v.channel != channel.id);
+                    SaveChannelFile();
+                });
+            }
         });
     });
     return GetStoreImages().then(data => {
@@ -67,7 +87,10 @@ function PostShopMessage() {
         var channelList = subbedChannels.filter(v => v.type == 'image').map(v => v.channel);
         client.channels.forEach(channel => {
             if (channelList.includes(channel.id)) {
-                channel.send(attach);
+                channel.send(attach).catch(error => {
+                    subbedChannels = subbedChannels.filter(v => v.channel != channel.id);
+                    SaveChannelFile();
+                });
             }
         });
     });

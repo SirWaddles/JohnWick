@@ -83,10 +83,11 @@ function GetAssetData(storeItem) {
             }
         }
     } catch (error) {
+        console.error(error);
         return {
             imagePath: false,
-            displayName: v.devName,
-            price: v.prices[0].finalPrice,
+            displayName: storeItem.devName,
+            price: storeItem.prices[0].finalPrice,
         };
     }
     return false;
