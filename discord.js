@@ -32,7 +32,7 @@ client.on('message', msg => {
         SaveChannelFile();
     }
     if (parts[0] == '!servers' && msg.author.id == '229419335930609664') {
-        msg.reply("\n```\n" + client.guilds.map(v => v.name).join("\n") + "\n```");
+        msg.reply("Currently connected to **" + client.guilds.length + "** servers");
     }
     if (parts[0] == '!shop') {
         if (parts.length > 1 && parts[1] == 'text') {
