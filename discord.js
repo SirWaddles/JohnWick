@@ -6,9 +6,15 @@ const { GetStoreImages } = require('./images');
 const { DiscordToken } = require('./tokens');
 
 var subbedChannels = [];
+var logStream = fs.createWriteStream('errors.txt', {flags: 'a'});
+
+function LogToFile(text) {
+    logStream.write(text + "\n");
+}
 
 if (fs.existsSync('channels.json')) {
     subbedChannels = JSON.parse(fs.readFileSync('channels.json'));
+    console.log(subbedChannels.length);
 }
 
 function SaveChannelFile() {
@@ -75,20 +81,28 @@ function PostShopMessage() {
         client.channels.forEach(channel => {
             if (channelList.includes(channel.id)) {
                 channel.send(message).catch(error => {
+                    LogToFile(error);
+                    LogToFile(subbedChannels.length);
                     // Probably missing permissions
                     subbedChannels = subbedChannels.filter(v => v.channel != channel.id);
+                    LogToFile(subbedChannels.length);
                     SaveChannelFile();
                 });
             }
         });
     });
     return GetStoreImages().then(data => {
-        var attach = new Discord.Attachment(data, 'shop.png');
+        var now = new Date();
+        var fileName = now.getFullYear() + '_' + now.getMonth() + '_' + now.getDate() + '.png';
+        fs.writeFileSync('./store_images/' + fileName, data);
         var channelList = subbedChannels.filter(v => v.type == 'image').map(v => v.channel);
         client.channels.forEach(channel => {
             if (channelList.includes(channel.id)) {
-                channel.send(attach).catch(error => {
+                channel.send("https://johnwick.genj.io/" + fileName).catch(error => {
+                    LogToFile(error);
+                    LogToFile(subbedChannels.length);
                     subbedChannels = subbedChannels.filter(v => v.channel != channel.id);
+                    LogToFile(subbedChannels.length);
                     SaveChannelFile();
                 });
             }

@@ -4,6 +4,14 @@ const { createCanvas, loadImage, registerFont } = require('canvas');
 
 registerFont('resources/fonts/LuckiestGuy-Regular.ttf', { family: 'Luckiest Guy'});
 
+const RarityColours = {
+    'Common': ['#bebebe','#646464'],
+    'Uncommon': ['#60aa3a','#175117'],
+    'Rare': ['#49acf2','#143977'],
+    'Epic': ['#b15be2','#4b2483'],
+    'Legendary': ['#d37841','#78371d'],
+};
+
 function GetWrappedString(ctx, string, width) {
     var words = string.split(' ');
     var writeStrings = [];
@@ -62,7 +70,15 @@ function CreateImageTile(stData) {
             return Promise.resolve(true);
         }
         return loadImage(filePath).then(image => {
+            if (v.rarity) {
+                var gradient = ctx.createRadialGradient(xOff + 256, yOff + 256, 128, xOff + 256, yOff + 256, 384);
+                gradient.addColorStop(0, RarityColours[v.rarity][0]);
+                gradient.addColorStop(1, RarityColours[v.rarity][1]);
+                ctx.fillStyle = gradient;
+                ctx.fillRect(xOff, yOff, 512, 512);
+            }
             ctx.drawImage(image, xOff, yOff, 512, 512);
+            ctx.fillStyle = "#fff";
 
             ctx.font = '24pt "Luckiest Guy"';
             ctx.fillText(v.displayName, xOff + 256, yOff + 475);

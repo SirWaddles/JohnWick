@@ -4,6 +4,13 @@ const path = require('path');
 const { ReadAsset } = require('./parse');
 const { FortniteToken } = require('./tokens');
 
+const RarityLevels = {
+    "EFortRarity::Handmade": "Common",
+    "EFortRarity::Sturdy": "Rare",
+    "EFortRarity::Quality": "Epic",
+    "EFortRarity::Fine": "Legendary",
+};
+
 var fortniteAPI = new Fortnite(FortniteToken, {
     debug: true,
 });
@@ -46,6 +53,13 @@ function GetAssetData(storeItem) {
             var price = storeItem.prices[0].finalPrice;
             var asset = storeItem.itemGrants[0].templateId.split(':');
             var upak = ReadAsset('resources/items/' + asset[1]);
+            var rarity = 'Uncommon';
+            if (upak.hasOwnProperty('Rarity')) {
+                var rarityType = upak.Rarity.toString();
+                if (RarityLevels.hasOwnProperty(rarityType)) {
+                    rarity = RarityLevels[upak.Rarity.toString()];
+                }
+            }
             if (storeItem.hasOwnProperty('displayAssetPath')) {
                 var components = path.basename(storeItem.displayAssetPath).split('.');
                 var upak2 = ReadAsset('resources/assets/' + components[0]);
@@ -53,6 +67,7 @@ function GetAssetData(storeItem) {
                     imagePath: upak2.DetailsImage.ResourceObject.Package.OuterIndex.Package.ObjectName.toString(),
                     displayName: upak.DisplayName.toString(),
                     price: price,
+                    rarity: rarity,
                 };
             }
             if (upak.hasOwnProperty('HeroDefinition')) {
@@ -62,6 +77,7 @@ function GetAssetData(storeItem) {
                     imagePath: upak2.LargePreviewImage.toString(),
                     displayName: upak.DisplayName.toString(),
                     price: price,
+                    rarity: rarity,
                 }
             }
             if (upak.hasOwnProperty('WeaponDefinition')) {
@@ -71,6 +87,7 @@ function GetAssetData(storeItem) {
                     imagePath: upak2.LargePreviewImage.toString(),
                     displayName: upak.DisplayName.toString(),
                     price: price,
+                    rarity: rarity,
                 }
             }
             if (upak.hasOwnProperty('LargePreviewImage')) {
@@ -79,6 +96,7 @@ function GetAssetData(storeItem) {
                     description: upak.Description.toString(),
                     displayName: upak.DisplayName.toString(),
                     price: price,
+                    rarity: rarity,
                 }
             }
         }
@@ -88,6 +106,7 @@ function GetAssetData(storeItem) {
             imagePath: false,
             displayName: storeItem.devName,
             price: storeItem.prices[0].finalPrice,
+            rarity: false,
         };
     }
     return false;

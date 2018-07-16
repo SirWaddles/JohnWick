@@ -375,12 +375,21 @@ class FVector {
     }
 }
 
+class FRotator {
+    constructor(reader) {
+        this.Pitch = reader.readFloatLE();
+        this.Yaw = reader.readFloatLE();
+        this.Roll = reader.readFloatLE();
+    }
+}
+
 const typeSerializers = {
     "Vector2D": (reader) => { return new FVector2D(reader); },
     "LinearColor": (reader) => { return new FLinearColor(reader); },
     "GameplayTagContainer": (reader) => { return new FGameplayTagContainer(reader); },
     "Quat": (reader) => { return new FQuat(reader); },
-    "Vector": (reader) => { return new FVector(reader); }
+    "Vector": (reader) => { return new FVector(reader); },
+    "Rotator": (reader) => { return new FRotator(reader); },
 }
 
 class FText {
@@ -519,3 +528,15 @@ function ReadAsset(path) {
 }
 
 exports.ReadAsset = ReadAsset;
+
+/*function ReadHeroAsset(path) {
+    var HeroPackage = new Package('resources/items/EID_HeelClick.uasset', 'resources/items/EID_HeelClick.uexp');
+    for (let i = 0; i < HeroPackage.Summary.ExportCount; i++) {
+        console.log(HeroPackage.ExportMap[i].toString());
+    }
+    console.log(HeroPackage.Exports[0].DisplayName.toString());
+    console.log(HeroPackage.Exports[0].Description.toString());
+    console.log(HeroPackage.Exports[0].LargePreviewImage.AssetPathName.toString());
+}
+
+ReadHeroAsset();*/
