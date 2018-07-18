@@ -61,8 +61,7 @@ function GetAssetData(storeItem) {
                 }
             }
             if (storeItem.hasOwnProperty('displayAssetPath')) {
-                var components = path.basename(storeItem.displayAssetPath).split('.');
-                var upak2 = ReadAsset('resources/assets/' + components[0]);
+                var upak2 = ReadAsset('resources/assets/da_featured_' + asset[1]);
                 return {
                     imagePath: upak2.DetailsImage.ResourceObject.Package.OuterIndex.Package.ObjectName.toString(),
                     displayName: upak.DisplayName.toString(),
