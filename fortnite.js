@@ -61,13 +61,23 @@ function GetAssetData(storeItem) {
                 }
             }
             if (storeItem.hasOwnProperty('displayAssetPath')) {
-                var upak2 = ReadAsset('resources/assets/da_featured_' + asset[1]);
-                return {
-                    imagePath: upak2.DetailsImage.ResourceObject.Package.OuterIndex.Package.ObjectName.toString(),
-                    displayName: upak.DisplayName.toString(),
-                    price: price,
-                    rarity: rarity,
-                };
+                var components = path.basename(storeItem.displayAssetPath).split('.');
+                var upak2 = false;
+                var daPath = 'resources/assets/' + components[0].toLowerCase();
+                if (fs.existsSync(daPath + '.uasset')) {
+                    upak2 = ReadAsset(daPath);
+                } else if (fs.existsSync('resources/assets/da_featured_' + asset[1] + '.uasset')) {
+                    upak2 = ReadAsset('resources/assets/da_featured_' + asset[1]);
+                }
+                if (upak2) {
+                    return {
+                        imagePath: upak2.DetailsImage.ResourceObject.Package.OuterIndex.Package.ObjectName.toString(),
+                        displayName: upak.DisplayName.toString(),
+                        price: price,
+                        rarity: rarity,
+                    };
+                }
+
             }
             if (upak.hasOwnProperty('HeroDefinition')) {
                 asset = upak.HeroDefinition.Package.OuterIndex.Package.ObjectName.toString();
