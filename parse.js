@@ -521,7 +521,7 @@ function ReadAsset(path) {
     var assetPath = path + '.uasset';
     var exportPath = path + '.uexp';
     if (!fs.existsSync(assetPath) || !fs.existsSync(exportPath)) {
-        throw "No asset found";
+        throw assetPath + " not found found";
     }
     var asset = new Package(path + '.uasset', path + '.uexp');
     return asset.Exports[0];
