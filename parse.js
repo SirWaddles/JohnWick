@@ -528,15 +528,3 @@ function ReadAsset(path) {
 }
 
 exports.ReadAsset = ReadAsset;
-
-/*function ReadHeroAsset(path) {
-    var HeroPackage = new Package('resources/items/EID_HeelClick.uasset', 'resources/items/EID_HeelClick.uexp');
-    for (let i = 0; i < HeroPackage.Summary.ExportCount; i++) {
-        console.log(HeroPackage.ExportMap[i].toString());
-    }
-    console.log(HeroPackage.Exports[0].DisplayName.toString());
-    console.log(HeroPackage.Exports[0].Description.toString());
-    console.log(HeroPackage.Exports[0].LargePreviewImage.AssetPathName.toString());
-}
-
-ReadHeroAsset();*/
