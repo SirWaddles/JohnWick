@@ -46,14 +46,23 @@ function GetAssetData(storeItem) {
         if (storeItem.hasOwnProperty('itemGrants') && storeItem.itemGrants.length > 0) {
             var price = storeItem.prices[0].finalPrice;
             var asset = storeItem.itemGrants[0].templateId.split(':');
-            let [assetData] = assetList.filter(v => v.id == asset);
+            let [assetData] = assetList.filter(v => v.id == asset[1]);
             if (!assetData) throw asset + " not found";
-            return {
+
+            let storeObj = {
                 imagePath: assetData.image,
                 displayName: assetData.name,
                 price: price,
                 rarity: assetData.rarity,
             };
+
+            if (storeItem.hasOwnProperty('displayAssetPath')) {
+                let daPath = path.basename(storeItem.displayAssetPath).split('.')[0].toLowerCase();
+                let [daAsset] = assetList.filter(v => v.id == daPath);
+                if (daAsset) storeObj.imagePath = daAsset.image;
+            }
+
+            return storeObj;
         }
     } catch (error) {
         console.error(error);

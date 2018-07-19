@@ -55,7 +55,7 @@ function CreateImageTile(stData) {
 
         var filePath = v.imagePath;
         if (filePath) {
-            filePath = 'resources/textures' + filePath.split('.')[0] + '.png';
+            filePath = 'textures/' + filePath;
         }
         if (!filePath || !fs.existsSync(filePath)) {
             ctx.font = '24pt "Luckiest Guy"';
