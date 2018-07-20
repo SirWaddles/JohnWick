@@ -3,6 +3,7 @@ const Fortnite = require('./fortnite');
 const { createCanvas, loadImage, registerFont } = require('canvas');
 
 registerFont('resources/fonts/LuckiestGuy-Regular.ttf', { family: 'Luckiest Guy'});
+registerFont('resources/fonts/OpenSans-Regular.ttf', { family: 'Open Sans'});
 
 const RarityColours = {
     'Common': ['#bebebe','#646464'],
@@ -23,7 +24,7 @@ function GetWrappedString(ctx, string, width) {
             writeString = words[i];
             continue;
         }
-        writeString += ' ' + words[i];
+        writeString += (i == 0 ? '' : ' ') + words[i];
     }
     writeStrings.push(writeString);
     return writeStrings;
@@ -37,13 +38,14 @@ function ColourToHex(colour) {
 }
 
 function CreateImageTile(stData) {
-    stData = stData.map(Fortnite.GetAssetData);
     var rows = Math.ceil(stData.length / 3);
-    var cols = 3;
+    var cols = Math.min(stData.length, 3);
     var canvas = createCanvas(512 * cols, 512 * rows);
     var ctx = canvas.getContext('2d');
 
-    return Promise.all(stData.map((v, idx) => {
+    let vBucksIcon = loadImage('resources/images/vbucks.png');
+
+    return vBucksIcon.then(vBuckImage => Promise.all(stData.map((v, idx) => {
         var row = Math.floor(idx / cols);
         var col = idx % cols;
         var xOff = 512 * col;
@@ -58,15 +60,6 @@ function CreateImageTile(stData) {
             filePath = 'textures/' + filePath;
         }
         if (!filePath || !fs.existsSync(filePath)) {
-            ctx.font = '24pt "Luckiest Guy"';
-            var writeStrings = GetWrappedString(ctx, v.displayName, 512);
-            writeStrings.forEach((v, idx) => {
-                ctx.fillText(v, xOff + 256, yOff + 500 + (idx * 25) - (writeStrings.length * 25));
-                ctx.strokeText(v, xOff + 256, yOff + 500 + (idx * 25) - (writeStrings.length * 25));
-            });
-            ctx.font = '14pt "Luckiest Guy"';
-            ctx.fillText(v.price, xOff + 256, yOff + 500);
-            ctx.strokeText(v.price, xOff + 256, yOff + 500);
             return Promise.resolve(true);
         }
         return loadImage(filePath).then(image => {
@@ -80,25 +73,43 @@ function CreateImageTile(stData) {
             ctx.drawImage(image, xOff, yOff, 512, 512);
             ctx.fillStyle = "#fff";
 
-            ctx.font = '24pt "Luckiest Guy"';
-            ctx.fillText(v.displayName, xOff + 256, yOff + 475);
-            ctx.strokeText(v.displayName, xOff + 256, yOff + 475);
-            ctx.font = '14pt "Luckiest Guy"';
-            ctx.fillText(v.price, xOff + 256, yOff + 500);
-            ctx.strokeText(v.price, xOff + 256, yOff + 500);
+            ctx.textAlign = 'center';
+            ctx.font = '32pt "Luckiest Guy"';
+            ctx.fillText(v.displayName, xOff + 256, yOff + 48);
+            ctx.strokeText(v.displayName, xOff + 256, yOff + 48);
+
+            if (v.hasOwnProperty('description') && v.description) {
+                ctx.textAlign = 'left';
+                ctx.font = '14pt "Open Sans"';
+                let writeStrs = GetWrappedString(ctx, v.description, 360);
+                writeStrs.forEach((str, idx) => {
+                    ctx.fillText(str, xOff + 20, yOff + 518 + (idx * 20) - writeStrs.length * 20);
+                });
+            }
+
+            if (v.hasOwnProperty('price') && v.price) {
+                ctx.textAlign = 'right';
+                ctx.font = '24pt "Luckiest Guy"';
+                ctx.drawImage(vBuckImage, xOff + 468, yOff + 468, 32, 32);
+                ctx.fillText(v.price, xOff + 460, yOff + 495);
+                ctx.strokeText(v.price, xOff + 460, yOff + 495);
+
+
+            }
         });
-    })).then(v => canvas.toBuffer());
+    }))).then(v => canvas.toBuffer());
 }
 
 function GetStoreImages() {
     return Fortnite.GetStoreData().then(data => {
         var storeInfo = Fortnite.GetStoreInfo(data);
-        return CreateImageTile(storeInfo);
+        return CreateImageTile(storeInfo.map(Fortnite.GetAssetData));
     }).catch(e => console.error(e));
 }
 
-/*GetStoreImages().then(v => {
-    fs.writeFileSync('image.png', v);
-});*/
+function GetChangeImage() {
+    return CreateImageTile(Fortnite.GetChangeItems());
+}
 
 exports.GetStoreImages = GetStoreImages;
+exports.GetChangeImage = GetChangeImage;

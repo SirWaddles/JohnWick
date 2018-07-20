@@ -1,6 +1,7 @@
-const Fortnite = require('fortnite-api');
 const fs = require('fs');
 const path = require('path');
+
+const Fortnite = require('fortnite-api');
 const { FortniteToken } = require('./tokens');
 
 var fortniteAPI = new Fortnite(FortniteToken, {
@@ -54,6 +55,7 @@ function GetAssetData(storeItem) {
                 displayName: assetData.name,
                 price: price,
                 rarity: assetData.rarity,
+                description: assetData.description,
             };
 
             if (storeItem.hasOwnProperty('displayAssetPath')) {
@@ -76,6 +78,21 @@ function GetAssetData(storeItem) {
     return false;
 }
 
+function GetChangeData(changeItem) {
+    return {
+        imagePath: changeItem.image,
+        displayName: changeItem.name,
+        rarity: changeItem.rarity,
+        description: changeItem.description,
+    };
+}
+
+function GetChangeItems() {
+    if (!fs.existsSync('changelist.json')) return [];
+    return JSON.parse(fs.readFileSync('changelist.json')).map(GetChangeData);
+}
+
+exports.GetChangeItems = GetChangeItems;
 exports.GetAssetData = GetAssetData;
 exports.GetStoreData = GetStoreData;
 exports.GetStoreItems = GetStoreItems;

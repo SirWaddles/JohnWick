@@ -1,5 +1,8 @@
 node_modules/
+textures/
+assets.json
 store.json
+changelist.json
 resources/
 channels.json
 tokens.js

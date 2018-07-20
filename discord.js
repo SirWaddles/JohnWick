@@ -2,7 +2,7 @@ const fs = require('fs');
 const Discord = require('discord.js');
 const client = new Discord.Client();
 const Fortnite = require('./fortnite');
-const { GetStoreImages } = require('./images');
+const { GetStoreImages, GetChangeImage } = require('./images');
 const { DiscordToken } = require('./tokens');
 
 var subbedChannels = [];
@@ -46,6 +46,12 @@ client.on('message', msg => {
             return;
         }
         GetStoreImages().then(data => {
+            var attach = new Discord.Attachment(data, 'shop.png');
+            msg.channel.send(attach);
+        });
+    }
+    if (parts[0] == '!changelist') {
+        GetChangeImage().then(data => {
             var attach = new Discord.Attachment(data, 'shop.png');
             msg.channel.send(attach);
         });
