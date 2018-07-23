@@ -22,6 +22,7 @@ function SaveChannelFile() {
 }
 
 client.on('message', msg => {
+    if (msg.author.bot) return;
     if (msg.content.substring(0, 1) != '!') return;
     var parts = msg.content.split(' ');
     if (parts[0] == '!subscribe') {
@@ -39,6 +40,19 @@ client.on('message', msg => {
     }
     if (parts[0] == '!servers' && msg.author.id == '229419335930609664') {
         msg.reply("Currently connected to **" + client.guilds.size + "** servers");
+        return;
+    }
+    if (parts[0] == '!serverlist' && msg.author.id == '229419335930609664') {
+        let listFile = client.guilds.sort((a, b) => {
+            return (a.name.toLowerCase() > b.name.toLowerCase()) ? 1 : -1;
+        }).map(v => {
+            let channelList = v.channels.filter(gc => subbedChannels.map(ch => ch.channel).includes(gc.id));
+            return v.name + "\n" + channelList.map(gc => "-" + gc.name).join("\n");
+        }).join("\n");
+        let fileBuffer = Buffer.from(listFile, 'utf8');
+        let attach = new Discord.Attachment(fileBuffer, 'list.txt');
+        msg.channel.send(attach);
+        return;
     }
     if (parts[0] == '!shop') {
         if (parts.length > 1 && parts[1] == 'text') {
