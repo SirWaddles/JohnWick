@@ -31,10 +31,27 @@ function BroadcastReminderMessage(msg) {
     });
 }
 
+client.on('ready', () => {
+    client.user.setActivity('Type !help', {type: 'PLAYING'});
+});
+
+const HELP_MESSAGE = `\`\`\`
+JohnWick is a bot that posts the contents of the Fortnite shop each day, usually around 00:00 GMT.
+
+* Use !subscribe in a channel to receive the shop notificaitons in that channel. The bot will need appropriate permissions. !unsubscribe will remove that channel.
+* !subscribe accepts a second argument, 'text', which will make it so that the notifications are text-only, instead of the shop image.
+
+You can see my source code at https://github.com/SirWaddles/JohnWick, so feel free to lodge an issue if you have any problems or a feature request.
+\`\`\``;
+
 client.on('message', msg => {
     if (msg.author.bot) return;
     if (msg.content.substring(0, 1) != '!') return;
     var parts = msg.content.split(' ');
+    if (parts[0] == '!help') {
+        msg.channel.send(HELP_MESSAGE);
+        return;
+    }
     if (parts[0] == '!subscribe') {
         subbedChannels.push({
             channel: msg.channel.id.toString(),
