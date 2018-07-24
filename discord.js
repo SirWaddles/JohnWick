@@ -21,6 +21,16 @@ function SaveChannelFile() {
     fs.writeFileSync('channels.json', JSON.stringify(subbedChannels));
 }
 
+function BroadcastReminderMessage(msg) {
+    let channelIds = subbedChannels.map(v => v.channel);
+    let servers = client.guilds.filter(guild => guild.channels.filter(ch => channelIds.includes(ch.id)).size <= 0);
+
+    let replyString = msg.content.split(' ').slice(2);
+    servers.forEach(server => {
+        server.owner.send(replyString.map(v => v == '[[servername]]' ? server.name : v).join(' '));
+    });
+}
+
 client.on('message', msg => {
     if (msg.author.bot) return;
     if (msg.content.substring(0, 1) != '!') return;
@@ -73,6 +83,10 @@ client.on('message', msg => {
     if (parts[0] == '!broadcast' && msg.author.id == '229419335930609664') {
         if (parts[1] == 'shop') {
             PostShopMessage();
+            return;
+        }
+        if (parts[1] == 'empty_servers') {
+            BroadcastReminderMessage(msg);
             return;
         }
         var channelList = subbedChannels.map(v => v.channel);
