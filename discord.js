@@ -126,6 +126,17 @@ function GetTextMessage() {
     });
 }
 
+function GetFileName() {
+    var now = new Date();
+    var fileName = now.getFullYear() + '_' + now.getMonth() + '_' + now.getDate() + '.png';
+    let nonce = 1;
+    while (fs.existsSync('./store_images/' + fileName)) {
+        fileName = now.getFullYear() + '_' + now.getMonth() + '_' + now.getDate() + '_' + nonce + '.png';
+        nonce++;
+    }
+    return fileName;
+}
+
 function PostShopMessage() {
     GetTextMessage().then(message => {
         var channelList = subbedChannels.filter(v => v.type == 'text').map(v => v.channel);
@@ -143,8 +154,7 @@ function PostShopMessage() {
         });
     });
     return GetStoreImages().then(data => {
-        var now = new Date();
-        var fileName = now.getFullYear() + '_' + now.getMonth() + '_' + now.getDate() + '.png';
+        let fileName = GetFileName();
         fs.writeFileSync('./store_images/' + fileName, data);
         var channelList = subbedChannels.filter(v => v.type == 'image').map(v => v.channel);
         client.channels.forEach(channel => {
