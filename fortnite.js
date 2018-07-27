@@ -13,8 +13,6 @@ fortniteAPI.login();
 var storeData = false;
 //storeData = JSON.parse(fs.readFileSync('store.json'));
 
-const assetList = JSON.parse(fs.readFileSync('./assets.json'));
-
 function RefreshStoreData() {
     return fortniteAPI.getStore('en').then(store => {
         fs.writeFileSync('store.json', JSON.stringify(store));
@@ -43,6 +41,7 @@ function GetStoreInfo(storeData) {
 }
 
 function GetAssetData(storeItem) {
+    const assetList = JSON.parse(fs.readFileSync('./assets.json'));
     try {
         if (storeItem.hasOwnProperty('itemGrants') && storeItem.itemGrants.length > 0) {
             var price = storeItem.prices[0].finalPrice;
