@@ -38,8 +38,8 @@ function ColourToHex(colour) {
 }
 
 function CreateImageTile(stData) {
-    var rows = Math.ceil(stData.length / 3);
-    var cols = Math.min(stData.length, 3);
+    var cols = Math.min(stData.length, Math.floor(Math.sqrt(stData.length)));
+    var rows = Math.ceil(stData.length / cols);
     var canvas = createCanvas(512 * cols, 512 * rows);
     var ctx = canvas.getContext('2d');
 

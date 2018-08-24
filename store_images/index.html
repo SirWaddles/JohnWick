@@ -1,0 +1,26 @@
+<!doctype html>
+<html>
+<head>
+    <title>JohnWick Discord Bot</title>
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet">
+    <link href="/styles2.css" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+    <h1>John Wick Discord Bot</h1>
+    <ul class="link-list">
+        <li><a href="https://discordapp.com/oauth2/authorize?client_id=436684273131716611&scope=bot">Invite @JohnWick to your server</a></li>
+        <li><a href="https://discord.gg/4FUwt2v">Join our Discord Support Server</a></li>
+    </ul>
+    <img class="wick-img" src="/wick.png">
+    <p id="latest-shop"></p>
+    <script type="text/javascript">
+        function GetFileName() {
+            var now = new Date();
+            var fileName = now.getUTCFullYear() + '_' + now.getUTCMonth() + '_' + now.getUTCDate() + '.png';
+            return fileName;
+        }
+        document.getElementById('latest-shop').innerHTML = "<img class='shop-img' src='/" + GetFileName() +"'>";
+    </script>
+</body>
+</html>

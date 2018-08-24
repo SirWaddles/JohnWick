@@ -1,0 +1,71 @@
+html,body {
+    margin: 0px;
+    padding: 0px;
+    font-family: 'Open Sans', sans-serif;
+    background-color: #333;
+    color: #fff;
+}
+
+h1 {
+    text-align: center;
+}
+
+.wick-img {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 800px;
+}
+
+a {
+    color: #eef;
+}
+
+a:visited {
+    color: #eff;
+}
+
+
+.shop-img {
+    display: block;
+    position: absolute;
+    top: 290px;
+    width: 800px;
+    left: 50%;
+    margin-left: -600px;
+}
+
+.link-list {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    text-align: center;
+}
+
+.link-list li {
+    display: inline-block;
+    width: 400px;
+}
+
+#latest-shop {
+    margin: 0px;
+}
+
+@media (max-width: 800px) {
+    .wick-img {
+        width: 55%;
+        padding-left: 0px;
+        position: absolute;
+        right: 0px;
+    }
+    .shop-img {
+        width: 70%;
+        left: 0px;
+        margin-left: 0px;
+        top: 200px;
+    }
+
+    .link-list li {
+        width: 45%;
+    }
+}
