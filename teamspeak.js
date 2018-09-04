@@ -142,7 +142,7 @@ class TSConnection {
 
     useServer(server) {
         return this.addReceiveHandler(() => {
-            this.sock.write('use ' + server + '\n');
+            this.sock.write('use port=' + server + '\n');
         });
     }
 
@@ -171,7 +171,7 @@ async function TSMessageHandle(msg, parts) {
             aid: msg.author.id,
             state: 'start',
         }]);
-        msg.author.send("I'll need some details to set this up. Type `!ts connect <host> <port>` so I can try connect to the ServerQuery interface");
+        msg.author.send("I'll need some details to set this up. Type `!ts connect <host> <query_port>` so I can try connect to the ServerQuery interface");
         return;
     }
     let authState = GetAuthState(msg);
@@ -200,9 +200,7 @@ async function TSMessageHandle(msg, parts) {
             await authState.connection.login(parts[2], parts[3]);
             authState.username = parts[2];
             authState.password = parts[3];
-            msg.author.send("Use `!ts select <server_id>` to choose which server to subscribe to");
-            let serverList = await authState.connection.getServerList();
-            msg.author.send(serverList.map(v => v.virtualserver_id + ': ' + v.virtualserver_name).join("\n"));
+            msg.author.send("Use `!ts port <server_port>` to choose which server to subscribe to");
             authState.state = 'server_selection';
         } catch (error) {
             msg.author.send("The login didn't seem to go through. Are you sure it's correct\n" + error.toString());
@@ -210,10 +208,10 @@ async function TSMessageHandle(msg, parts) {
         }
     }
 
-    if (parts[1] == 'select' && authState.state == 'server_selection') {
+    if (parts[1] == 'port' && authState.state == 'server_selection') {
         try {
-            authState.serverId = parts[2];
-            await authState.connection.useServer(authState.serverId);
+            authState.serverPort = parts[2];
+            await authState.connection.useServer(authState.serverPort);
             let channelList = await authState.connection.getChannelList();
             msg.author.send("Use `!ts select <channel_id>` to choose which channel to subscribe to");
             msg.author.send(channelList.val.map(v => v.cid + ": " + v.channel_name).join("\n"));
@@ -234,7 +232,7 @@ async function TSMessageHandle(msg, parts) {
             return {
                 type: 'teamspeak',
                 aid: authState.aid,
-                serverId: authState.serverId,
+                serverPort: authState.serverPort,
                 channelId: authState.channelId,
                 host: authState.host,
                 port: authState.port,
