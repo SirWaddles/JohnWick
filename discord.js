@@ -4,6 +4,7 @@ const client = new Discord.Client();
 const Fortnite = require('./fortnite');
 const { GetStoreImages, GetChangeImage } = require('./images');
 const { DiscordToken } = require('./tokens');
+const TSMessageHandle = require('./teamspeak');
 
 var subbedChannels = [];
 var logStream = fs.createWriteStream('errors.txt', {flags: 'a'});
@@ -51,6 +52,14 @@ client.on('message', msg => {
     if (parts[0] == '!help') {
         msg.channel.send(HELP_MESSAGE);
         return;
+    }
+    if (parts[0] == '!ts') {
+        return TSMessageHandle(msg, parts).then(data => {
+            if (data && data.hasOwnProperty('aid')) {
+                subbedChannels.push(data);
+                SaveChannelFile();
+            }
+        });
     }
     if (parts[0] == '!subscribe') {
         subbedChannels.push({
