@@ -50,7 +50,6 @@ function ts_parseline(str) {
 
 function ts_parselist(str) {
     let lines = str.split("\n\r").map(ts_parseline).filter(v => v);
-    lines.pop();
     if (lines[0][0].hasOwnProperty('error')) {
         return {
             val: null,
@@ -199,23 +198,33 @@ async function TSMessageHandle(msg, parts) {
     if (parts[1] == 'authenticate' && authState.state == 'connected') {
         try {
             await authState.connection.login(parts[2], parts[3]);
-            msg.author.send("Looks to be working. You'll just need to select a channel to subscribe to");
-            let serverList = await authState.connection.getServerList();
-            await authState.connection.useServer(serverList[0].virtualserver_id);
             authState.username = parts[2];
             authState.password = parts[3];
-            authState.serverId = serverList[0].virtualserver_id;
-            let channelList = await authState.connection.getChannelList();
-            msg.author.send("Use `!ts select <channel_id>` to choose which channel to subscribe to");
-            msg.author.send(channelList.val.map(v => v.cid + ": " + v.channel_name).join("\n"));
-            authState.state = 'selection';
+            msg.author.send("Use `!ts select <server_id>` to choose which server to subscribe to");
+            let serverList = await authState.connection.getServerList();
+            msg.author.send(serverList.map(v => v.virtualserver_id + ': ' + v.virtualserver_name).join("\n"));
+            authState.state = 'server_selection';
         } catch (error) {
             msg.author.send("The login didn't seem to go through. Are you sure it's correct\n" + error.toString());
             return;
         }
     }
 
-    if (parts[1] == 'select' && authState.state == 'selection') {
+    if (parts[1] == 'select' && authState.state == 'server_selection') {
+        try {
+            authState.serverId = parts[2];
+            await authState.connection.useServer(authState.serverId);
+            let channelList = await authState.connection.getChannelList();
+            msg.author.send("Use `!ts select <channel_id>` to choose which channel to subscribe to");
+            msg.author.send(channelList.val.map(v => v.cid + ": " + v.channel_name).join("\n"));
+            authState.state = 'channel_selection';
+        } catch (error) {
+            msg.author.send("I wasn't able to select that server\n" + error.toString());
+            return;
+        }
+    }
+
+    if (parts[1] == 'select' && authState.state == 'channel_selection') {
         try {
             authState.channelId = parts[2];
             await authState.connection.setChannelDescription(authState.channelId, "Hey, JohnWick has set this.");
