@@ -4,7 +4,7 @@ const client = new Discord.Client();
 const Fortnite = require('./fortnite');
 const { GetStoreImages, GetChangeImage } = require('./images');
 const { DiscordToken } = require('./tokens');
-const TSMessageHandle = require('./teamspeak');
+const { TSMessageHandle, SendServerImage } = require('./teamspeak');
 
 var subbedChannels = [];
 var logStream = fs.createWriteStream('errors.txt', {flags: 'a'});
@@ -107,6 +107,11 @@ client.on('message', msg => {
         });
     }
     if (parts[0] == '!broadcast' && msg.author.id == '229419335930609664') {
+        if (parts[1] == 'ts') {
+            let tsList = subbedChannels.filter(v => v.type == 'teamspeak');
+            SendServerImage(tsList, parts.slice(2).join(" "));
+            return;
+        }
         if (parts[1] == 'shop') {
             PostShopMessage();
             return;
@@ -177,6 +182,8 @@ function PostShopMessage() {
                 });
             }
         });
+        let tsList = subbedChannels.filter(v => v.type == 'teamspeak');
+        SendServerImage(tsList, "https://johnwick.genj.io/" + fileName);
     });
 }
 

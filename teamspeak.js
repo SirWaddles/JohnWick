@@ -102,7 +102,7 @@ class TSConnection {
             this.dataHandlers.push({
                 handle: resolve,
                 error: reject,
-                expires: Date.now() + 2000,
+                expires: Date.now() + 10000,
                 parse: (typeof ignoreParse == 'undefined') ? true : false,
             });
             message();
@@ -137,6 +137,12 @@ class TSConnection {
         }).then(serverList => {
             this.serverList = serverList.val;
             return serverList.val;
+        });
+    }
+
+    setServerName() {
+        return this.addReceiveHandler(() => {
+            this.sock.write("clientupdate client_nickname=JohnWick\n");
         });
     }
 
@@ -246,4 +252,24 @@ async function TSMessageHandle(msg, parts) {
     }
 }
 
-module.exports = TSMessageHandle;
+function SendServerImage(servers, imageUrl) {
+    servers.forEach(async v => {
+        if (!v.hasOwnProperty('serverPort')) return;
+        let con = new TSConnection();
+        try {
+            await con.connect(v.host, v.port);
+            await con.login(v.username, v.password);
+            await con.useServer(v.serverPort);
+            await con.setServerName();
+            await con.setChannelDescription(v.channelId, imageUrl);
+            con.cleanup();
+        } catch (error) {
+            console.error(error);
+            con.cleanup();
+            return;
+        }
+    });
+}
+
+exports.TSMessageHandle = TSMessageHandle;
+exports.SendServerImage = SendServerImage;
