@@ -6,3 +6,5 @@ changelist.json
 resources/
 channels.json
 tokens.js
+live/paks/*
+live/assets/*
