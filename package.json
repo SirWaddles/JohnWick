@@ -7,10 +7,10 @@
   "license": "MIT",
   "dependencies": {
     "abab": "^2.0.0",
-    "canvas": "^2.0.0-alpha.12",
+    "canvas": "^1.6.12",
     "discord.js": "^11.3.2",
     "dxt": "^1.0.1",
     "fortnite-api": "^2.10.0",
-    "jimp": "^0.5.3"
+    "jimp": "^0.2.28"
   }
 }

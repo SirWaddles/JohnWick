@@ -2,19 +2,20 @@ const fs = require('fs');
 const path = require('path');
 const { atob } = require('abab');
 const { PakExtractor } = require('john-wick-extra/extract');
-const { GetItemPaths } = require('john-wick-extra/process');
+const { GetItemPaths, AddAsset, ProcessItems } = require('john-wick-extra/process');
+const { ReadAsset, Texture2D } = require('john-wick-extra/parse');
 
-/*const Fortnite = require('fortnite-api');
+const Fortnite = require('fortnite-api');
 const { FortniteToken } = require('./tokens');
 
 var fortniteAPI = new Fortnite(FortniteToken, {
     debug: true,
 });
 
-fortniteAPI.login();*/
+fortniteAPI.login();
 
 var storeData = false;
-storeData = JSON.parse(fs.readFileSync('store.json'));
+//storeData = JSON.parse(fs.readFileSync('store.json'));
 
 function RefreshStoreData() {
     return fortniteAPI.getStore('en').then(store => {
@@ -25,7 +26,7 @@ function RefreshStoreData() {
 }
 
 function GetStoreData() {
-    return Promise.resolve(storeData);
+    //return Promise.resolve(storeData);
     if (!storeData) return RefreshStoreData();
     var now = new Date();
     var expires = new Date(storeData.expiration);
@@ -78,17 +79,40 @@ async function PrepareStoreAssets(storeData) {
     if (keyDatas.length <= 0) return storeInfo;
     let guidList = keyDatas.map(v => v.guid);
     let pakMap = BuildPakMap().filter(v => guidList.includes(v.guid));
+    let assetFiles = [];
     pakMap.forEach(v => {
         v.extractor.replaceKey(keyDatas.filter(e => e.guid == v.guid).pop().key);
         v.extractor.readIndex();
-        let paths = GetItemPaths(v.extractor.PakIndex.IndexEntries.map(v => v.Filename.toString()));
-        console.log(paths);
+        let paths = GetItemPaths(v.extractor.getPaths());
+        for (let i = 0; i < paths.length; i++) {
+            let filepath = paths[i];
+            let filename = filepath.split('/').pop().toLowerCase();
+            let file = v.extractor.getFileFromPath(filepath);
+            fs.writeFileSync('./live/assets/' + filename, file);
+            assetFiles.push(filename);
+        }
     });
+
+    for (let i = 0; i < assetFiles.length; i++) {
+        let filename = assetFiles[i];
+        if (filename.endsWith('.uexp')) continue;
+        let fileAsset = filename.slice(0, -7);
+        let asset = ReadAsset('./live/assets/' + fileAsset);
+        if (asset instanceof Texture2D) {
+            let tPath = './textures/' + fileAsset + '.png';
+            await asset.textures.pop().writeFile(tPath);
+        }
+        AddAsset(asset, fileAsset);
+    }
+
+    let assets = ProcessItems();
+    let newIds = assets.map(v => v.id);
+    let currentAssetList = JSON.parse(fs.readFileSync('./assets.json')).filter(v => !newIds.includes(v.id));
+    currentAssetList = currentAssetList.concat(assets);
+    fs.writeFileSync('./assets.json', JSON.stringify(currentAssetList));
 
     return storeInfo;
 }
-
-PrepareStoreAssets(GetStoreData());
 
 function GetAssetData(storeItem) {
     const assetList = JSON.parse(fs.readFileSync('./assets.json'));
