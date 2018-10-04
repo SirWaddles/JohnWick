@@ -1,9 +1,9 @@
 const fs = require('fs');
 const Fortnite = require('./fortnite');
-const { createCanvas, loadImage, registerFont } = require('canvas');
+const Canvas = require('canvas');
 
-registerFont('resources/fonts/LuckiestGuy-Regular.ttf', { family: 'Luckiest Guy'});
-registerFont('resources/fonts/OpenSans-Regular.ttf', { family: 'Open Sans'});
+Canvas.registerFont('resources/fonts/LuckiestGuy-Regular.ttf', { family: 'Luckiest Guy'});
+Canvas.registerFont('resources/fonts/OpenSans-Regular.ttf', { family: 'Open Sans'});
 
 const RarityColours = {
     'Common': ['#bebebe','#646464'],
@@ -40,10 +40,10 @@ function ColourToHex(colour) {
 function CreateImageTile(stData) {
     var rows = Math.min(stData.length, Math.round(Math.sqrt(stData.length)));
     var cols = Math.ceil(stData.length / rows);
-    var canvas = createCanvas(512 * cols, 512 * rows);
+    var canvas = Canvas.createCanvas(512 * cols, 512 * rows);
     var ctx = canvas.getContext('2d');
 
-    let vBucksIcon = loadImage('resources/images/vbucks.png');
+    let vBucksIcon = Canvas.loadImage('resources/images/vbucks.png');
 
     return vBucksIcon.then(vBuckImage => Promise.all(stData.map((v, idx) => {
         var row = Math.floor(idx / cols);
@@ -62,7 +62,7 @@ function CreateImageTile(stData) {
         if (!filePath || !fs.existsSync(filePath)) {
             return Promise.resolve(true);
         }
-        return loadImage(filePath).then(image => {
+        return Canvas.loadImage(filePath).then(image => {
             if (v.rarity) {
                 var gradient = ctx.createRadialGradient(xOff + 256, yOff + 256, 128, xOff + 256, yOff + 256, 384);
                 gradient.addColorStop(0, RarityColours[v.rarity][0]);
