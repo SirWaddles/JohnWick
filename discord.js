@@ -182,8 +182,8 @@ function PostShopMessage() {
                 });
             }
         });
-        let tsList = subbedChannels.filter(v => v.type == 'teamspeak');
-        SendServerImage(tsList, "https://johnwick.genj.io/" + fileName);
+        //let tsList = subbedChannels.filter(v => v.type == 'teamspeak');
+        //SendServerImage(tsList, "https://johnwick.genj.io/" + fileName);
     });
 }
 
