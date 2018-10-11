@@ -134,7 +134,7 @@ function GetAssetData(storeItem) {
             if (storeItem.hasOwnProperty('displayAssetPath')) {
                 let daPath = path.basename(storeItem.displayAssetPath).split('.')[0].toLowerCase();
                 let [daAsset] = assetList.filter(v => v.id == daPath);
-                if (daAsset) storeObj.imagePath = daAsset.image;
+                if (daAsset && fs.existsSync('textures/' + daAsset.image)) storeObj.imagePath = daAsset.image;
             }
 
             return storeObj;
