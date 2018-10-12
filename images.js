@@ -13,6 +13,14 @@ const RarityColours = {
     'Legendary': ['#d37841','#78371d'],
 };
 
+const RarityOrder = {
+    'Legendary': 0,
+    'Epic': 1,
+    'Rare': 2,
+    'Uncommon': 3,
+    'Common': 4,
+};
+
 function GetWrappedString(ctx, string, width) {
     var words = string.split(' ');
     var writeStrings = [];
@@ -42,6 +50,19 @@ function CreateImageTile(stData) {
     var cols = Math.ceil(stData.length / rows);
     var canvas = Canvas.createCanvas(512 * cols, 512 * rows);
     var ctx = canvas.getContext('2d');
+
+    stData.sort((a, b) => {
+        let rarityA, rarityB = 5;
+        if (a.hasOwnProperty('rarity')) rarityA = RarityOrder[a.rarity];
+        if (b.hasOwnProperty('rarity')) rarityB = RarityOrder[b.rarity];
+        if (rarityA < rarityB) {
+            return -1;
+        }
+        if (rarityA > rarityB) {
+            return 1;
+        }
+        return 0;
+    });
 
     let vBucksIcon = Canvas.loadImage('resources/images/vbucks.png');
 
