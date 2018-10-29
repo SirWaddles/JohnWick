@@ -22,17 +22,25 @@ const RarityOrder = {
 };
 
 function GetWrappedString(ctx, string, width) {
-    var words = string.split(' ');
+    var words = string.split(' ').map(v => v.split("\n")).map(j => [].concat(...j.map(e => [{newline: true}, e])).slice(1)).reduce((acc, v) => acc.concat(v), []);
     var writeStrings = [];
     var writeString = '';
+    let skipSpace = true;
     for (var i=0; i < words.length; i++) {
+        if (words[i].hasOwnProperty('newline')) {
+            writeStrings.push(writeString);
+            writeString = '';
+            skipSpace = true;
+            continue;
+        }
         var metr = ctx.measureText(writeString + ' ' + words[i]);
         if (metr.width > width) {
             if (writeString.length > 0) writeStrings.push(writeString);
             writeString = words[i];
             continue;
         }
-        writeString += (i == 0 ? '' : ' ') + words[i];
+        writeString += (skipSpace ? '' : ' ') + words[i];
+        skipSpace = false;
     }
     writeStrings.push(writeString);
     return writeStrings;
