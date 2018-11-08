@@ -131,8 +131,6 @@ client.on('message', msg => {
     }
 });
 
-var targetPost = false;
-
 function GetTextMessage() {
     return Fortnite.GetStoreData().then(data => {
         var storeInfo = Fortnite.GetStoreInfo(data);
@@ -187,19 +185,17 @@ function PostShopMessage() {
     });
 }
 
-setInterval(function() {
-    var now = new Date();
-    Fortnite.GetStoreData().then(data => {
-        if (!targetPost) {
-            targetPost = new Date(data.expiration);
-            return;
-        }
+function PostNextMessage() {
+    PostShopMessage();
+    setTimeout(PostNextMessage, 24 * 60 * 60 * 1000); // Daily cycle
+}
 
-        if (now > targetPost) {
-            PostShopMessage();
-            targetPost = new Date(data.expiration);
-        }
+Fortnite.OnLogin.then(() => {
+    Fortnite.GetStoreData().then(data => {
+        let targetTime = new Date(data.expiration);
+        let timeUntil = targetTime.getTime() - Date.now();
+        setTimeout(PostNextMessage, timeUntil + 5000);
     });
-}, 300000); // 5 minutes - 60 * 5 * 1000
+});
 
 client.login(DiscordToken);

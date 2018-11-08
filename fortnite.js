@@ -12,7 +12,7 @@ var fortniteAPI = new Fortnite(FortniteToken, {
     debug: true,
 });
 
-fortniteAPI.login();
+exports.OnLogin = fortniteAPI.login();
 
 var storeData = false;
 //storeData = JSON.parse(fs.readFileSync('store.json'));
