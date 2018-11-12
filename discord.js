@@ -62,12 +62,15 @@ client.on('message', msg => {
         });
     }
     if (parts[0] == '!subscribe') {
-        subbedChannels.push({
-            channel: msg.channel.id.toString(),
-            type: (parts.length > 1 && parts[1] == 'text') ? 'text' : 'image',
+        msg.channel.send("Sure thing! I'll tell you when the shop updates.").then(message => {
+            subbedChannels.push({
+                channel: msg.channel.id.toString(),
+                type: (parts.length > 1 && parts[1] == 'text') ? 'text' : 'image',
+            });
+            SaveChannelFile();
+        }).catch(e => {
+            LogToFile('attempted to subscribe to ' + msg.channel.id);
         });
-        msg.channel.send("Sure thing! I'll tell you when the shop updates.");
-        SaveChannelFile();
     }
     if (parts[0] == '!unsubscribe') {
         subbedChannels = subbedChannels.filter(v => v.channel != msg.channel.id);
@@ -156,11 +159,10 @@ function PostShopMessage() {
             if (channelList.includes(channel.id)) {
                 channel.send(message).catch(error => {
                     LogToFile(error);
-                    LogToFile(subbedChannels.length);
+                    LogToFile(channel.id);
                     // Probably missing permissions
-                    subbedChannels = subbedChannels.filter(v => v.channel != channel.id);
-                    LogToFile(subbedChannels.length);
-                    SaveChannelFile();
+                    //subbedChannels = subbedChannels.filter(v => v.channel != channel.id);
+                    //SaveChannelFile();
                 });
             }
         });
@@ -173,10 +175,9 @@ function PostShopMessage() {
             if (channelList.includes(channel.id)) {
                 channel.send("https://johnwick.genj.io/" + fileName).catch(error => {
                     LogToFile(error);
-                    LogToFile(subbedChannels.length);
-                    subbedChannels = subbedChannels.filter(v => v.channel != channel.id);
-                    LogToFile(subbedChannels.length);
-                    SaveChannelFile();
+                    LogToFile(channel.id);
+                    //subbedChannels = subbedChannels.filter(v => v.channel != channel.id);
+                    //SaveChannelFile();
                 });
             }
         });
