@@ -118,7 +118,10 @@ function GetAssetData(storeItem) {
     const assetList = JSON.parse(fs.readFileSync('./assets.json'));
     try {
         if (storeItem.hasOwnProperty('itemGrants') && storeItem.itemGrants.length > 0) {
-            var price = storeItem.prices[0].finalPrice;
+            let price = 0;
+            if (storeItem.hasOwnProperty('prices') && storeItem.prices.length > 0) {
+                price = storeItem.prices[0].finalPrice;
+            }
             var asset = storeItem.itemGrants[0].templateId.split(':');
             let [assetData] = assetList.filter(v => v.id == asset[1]);
             if (!assetData) throw asset + " not found";
