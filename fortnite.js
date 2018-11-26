@@ -114,6 +114,18 @@ async function PrepareStoreAssets(storeData) {
     return storeInfo;
 }
 
+function GetAssetItemData(assetList, assetKey) {
+    let assetPath = assetKey.split(':');
+    let [assetData] = assetList.filter(v => v.id == assetPath[1]);
+    if (!assetData) return false;
+    return {
+        imagePath: assetData.image,
+        displayName: assetData.name,
+        rarity: assetData.rarity,
+        description: assetData.description,
+    };
+}
+
 function GetAssetData(storeItem) {
     const assetList = JSON.parse(fs.readFileSync('./assets.json'));
     try {
@@ -121,18 +133,16 @@ function GetAssetData(storeItem) {
             let price = 0;
             if (storeItem.hasOwnProperty('prices') && storeItem.prices.length > 0) {
                 price = storeItem.prices[0].finalPrice;
+            } else if (storeItem.hasOwnProperty('dynamicBundleInfo') && storeItem.dynamicBundleInfo.hasOwnProperty('bundleItems')) {
+                price = storeItem.dynamicBundleInfo.bundleItems.map(v => v.discountedPrice).reduce((acc, v) => acc + v, 0);
             }
-            var asset = storeItem.itemGrants[0].templateId.split(':');
-            let [assetData] = assetList.filter(v => v.id == asset[1]);
-            if (!assetData) throw asset + " not found";
 
-            let storeObj = {
-                imagePath: assetData.image,
-                displayName: assetData.name,
-                price: price,
-                rarity: assetData.rarity,
-                description: assetData.description,
-            };
+            let storeObjs = storeItem.itemGrants.map(v => GetAssetItemData(assetList, v.templateId));
+
+            if (storeObjs.length <= 0) throw "No asset found for " + storeItem.devName;
+            let storeObj = storeObjs.shift();
+            storeObj.price = price;
+            storeObj.extraItems = storeObjs;
 
             if (storeItem.hasOwnProperty('displayAssetPath')) {
                 let daPath = path.basename(storeItem.displayAssetPath).split('.')[0].toLowerCase();

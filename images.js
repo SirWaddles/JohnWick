@@ -53,7 +53,7 @@ function ColourToHex(colour) {
     return 'rgba(' + tag2(colour.R) + ', ' + tag2(colour.G) + ', ' + tag2(colour.B) + ', ' + colour.A + ')';
 }
 
-function CreateImageTile(stData) {
+async function CreateImageTile(stData) {
     var rows = Math.min(stData.length, Math.round(Math.sqrt(stData.length)));
     var cols = Math.ceil(stData.length / rows);
     var canvas = Canvas.createCanvas(512 * cols, 512 * rows);
@@ -72,9 +72,9 @@ function CreateImageTile(stData) {
         return 0;
     });
 
-    let vBucksIcon = Canvas.loadImage('resources/images/vbucks.png');
+    let vBuckImage = await Canvas.loadImage('resources/images/vbucks.png');
 
-    return vBucksIcon.then(vBuckImage => Promise.all(stData.map((v, idx) => {
+    await Promise.all(stData.map(async (v, idx) => {
         var row = Math.floor(idx / cols);
         var col = idx % cols;
         var xOff = 512 * col;
@@ -91,42 +91,52 @@ function CreateImageTile(stData) {
         if (!filePath || !fs.existsSync(filePath)) {
             return Promise.resolve(true);
         }
-        return Canvas.loadImage(filePath).then(image => {
-            if (v.rarity) {
-                var gradient = ctx.createRadialGradient(xOff + 256, yOff + 256, 128, xOff + 256, yOff + 256, 384);
-                gradient.addColorStop(0, RarityColours[v.rarity][0]);
-                gradient.addColorStop(1, RarityColours[v.rarity][1]);
-                ctx.fillStyle = gradient;
-                ctx.fillRect(xOff, yOff, 512, 512);
-            }
-            ctx.drawImage(image, xOff, yOff, 512, 512);
-            ctx.fillStyle = "#fff";
 
-            ctx.textAlign = 'center';
-            ctx.font = '32pt "Luckiest Guy"';
-            ctx.fillText(v.displayName, xOff + 256, yOff + 48);
-            ctx.strokeText(v.displayName, xOff + 256, yOff + 48);
+        let image = await Canvas.loadImage(filePath);
+        if (v.rarity) {
+            var gradient = ctx.createRadialGradient(xOff + 256, yOff + 256, 128, xOff + 256, yOff + 256, 384);
+            gradient.addColorStop(0, RarityColours[v.rarity][0]);
+            gradient.addColorStop(1, RarityColours[v.rarity][1]);
+            ctx.fillStyle = gradient;
+            ctx.fillRect(xOff, yOff, 512, 512);
+        }
+        ctx.drawImage(image, xOff, yOff, 512, 512);
+        ctx.fillStyle = "#fff";
 
-            if (v.hasOwnProperty('description') && v.description) {
-                ctx.textAlign = 'left';
-                ctx.font = '14pt "Open Sans"';
-                let writeStrs = GetWrappedString(ctx, v.description, 360);
-                writeStrs.forEach((str, idx) => {
-                    ctx.fillText(str, xOff + 20, yOff + 518 + (idx * 20) - writeStrs.length * 20);
-                });
-            }
+        ctx.textAlign = 'center';
+        ctx.font = '32pt "Luckiest Guy"';
+        ctx.fillText(v.displayName, xOff + 256, yOff + 48);
+        ctx.strokeText(v.displayName, xOff + 256, yOff + 48);
 
-            if (v.hasOwnProperty('price') && v.price) {
-                ctx.textAlign = 'right';
-                ctx.font = '24pt "Luckiest Guy"';
-                ctx.drawImage(vBuckImage, xOff + 468, yOff + 468, 32, 32);
-                ctx.fillText(v.price, xOff + 460, yOff + 495);
-                ctx.strokeText(v.price, xOff + 460, yOff + 495);
+        if (v.hasOwnProperty('description') && v.description) {
+            ctx.textAlign = 'left';
+            ctx.font = '14pt "Open Sans"';
+            let writeStrs = GetWrappedString(ctx, v.description, 360);
+            writeStrs.forEach((str, idx) => {
+                ctx.fillText(str, xOff + 20, yOff + 518 + (idx * 20) - writeStrs.length * 20);
+            });
+        }
 
+        if (v.hasOwnProperty('price') && v.price) {
+            ctx.textAlign = 'right';
+            ctx.font = '24pt "Luckiest Guy"';
+            ctx.drawImage(vBuckImage, xOff + 468, yOff + 468, 32, 32);
+            ctx.fillText(v.price, xOff + 460, yOff + 495);
+            ctx.strokeText(v.price, xOff + 460, yOff + 495);
+        }
 
-            }
-        });
-    }))).then(v => canvas.toBuffer());
+        if (v.hasOwnProperty('extraItems')) await Promise.all(v.extraItems.map(async (extraItem, idx) => {
+            if (!extraItem) return false;
+            let itemImagePath = './textures/' + extraItem.imagePath;
+            if (!fs.existsSync(itemImagePath)) return true;
+            let itemImage = await Canvas.loadImage(itemImagePath);
+
+            ctx.fillStyle = RarityColours[extraItem.rarity][0];
+            ctx.fillRect(xOff + (idx * 128), yOff + 320, 128, 128);
+            ctx.drawImage(itemImage, xOff + (idx * 128), yOff + 320, 128, 128);
+        }));
+    }));
+    return canvas.toBuffer();
 }
 
 function GetStoreImages() {
