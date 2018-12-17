@@ -146,9 +146,4 @@ function GetStoreImages() {
     }).catch(e => console.error(e));
 }
 
-function GetChangeImage() {
-    return CreateImageTile(Fortnite.GetChangeItems());
-}
-
 exports.GetStoreImages = GetStoreImages;
-exports.GetChangeImage = GetChangeImage;

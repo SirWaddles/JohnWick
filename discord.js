@@ -2,7 +2,7 @@ const fs = require('fs');
 const Discord = require('discord.js');
 const client = new Discord.Client();
 const Fortnite = require('./fortnite');
-const { GetStoreImages, GetChangeImage } = require('./images');
+const { GetStoreImages } = require('./images');
 const { DiscordToken } = require('./tokens');
 const { TSMessageHandle, SendServerImage } = require('./teamspeak');
 
@@ -103,12 +103,6 @@ client.on('message', msg => {
             msg.channel.send(attach);
         });
     }
-    if (parts[0] == '!changelist') {
-        GetChangeImage().then(data => {
-            var attach = new Discord.Attachment(data, 'shop.png');
-            msg.channel.send(attach);
-        });
-    }
     if (parts[0] == '!broadcast' && msg.author.id == '229419335930609664') {
         if (parts[1] == 'ts') {
             let tsList = subbedChannels.filter(v => v.type == 'teamspeak');
@@ -191,12 +185,10 @@ function PostNextMessage() {
     setTimeout(PostNextMessage, 24 * 60 * 60 * 1000); // Daily cycle
 }
 
-Fortnite.OnLogin.then(() => {
-    Fortnite.GetStoreData().then(data => {
-        let targetTime = new Date(data.expiration);
-        let timeUntil = targetTime.getTime() - Date.now();
-        setTimeout(PostNextMessage, timeUntil + 5000);
-    });
+Fortnite.GetStoreData().then(data => {
+    let targetTime = new Date(data.expiration);
+    let timeUntil = targetTime.getTime() - Date.now();
+    setTimeout(PostNextMessage, timeUntil + 5000);
 });
 
 client.login(DiscordToken);

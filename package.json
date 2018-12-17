@@ -10,7 +10,7 @@
     "canvas": "^2.0.0-alpha.17",
     "discord.js": "^11.3.2",
     "dxt": "^1.0.1",
-    "fortnite-api": "^2.10.0",
-    "jimp": "^0.2.28"
+    "jimp": "^0.2.28",
+    "node-fetch": "^2.3.0"
   }
 }

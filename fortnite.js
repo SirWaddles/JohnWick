@@ -4,21 +4,13 @@ const { atob } = require('abab');
 const { PakExtractor } = require('john-wick-extra/extract');
 const { GetItemPaths, AddAsset, ProcessItems } = require('john-wick-extra/process');
 const { ReadAsset, Texture2D } = require('john-wick-extra/parse');
-
-const Fortnite = require('fortnite-api');
-const { FortniteToken } = require('./tokens');
-
-var fortniteAPI = new Fortnite(FortniteToken, {
-    debug: true,
-});
-
-exports.OnLogin = fortniteAPI.login();
+const { getStoreData } = require('./api');
 
 var storeData = false;
 //storeData = JSON.parse(fs.readFileSync('store.json'));
 
 function RefreshStoreData() {
-    return fortniteAPI.getStore('en').then(store => {
+    return getStoreData().then(store => {
         fs.writeFileSync('store.json', JSON.stringify(store));
         storeData = store;
         return store;
