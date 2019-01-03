@@ -167,7 +167,7 @@ function PostShopMessage() {
         var channelList = subbedChannels.filter(v => v.type == 'image').map(v => v.channel);
         client.channels.forEach(channel => {
             if (channelList.includes(channel.id)) {
-                channel.send("https://johnwick.genj.io/" + fileName).catch(error => {
+                channel.send("https://johnwickbot.shop/" + fileName).catch(error => {
                     LogToFile(error);
                     LogToFile(channel.id);
                     //subbedChannels = subbedChannels.filter(v => v.channel != channel.id);
@@ -182,13 +182,17 @@ function PostShopMessage() {
 
 function PostNextMessage() {
     PostShopMessage();
-    setTimeout(PostNextMessage, 24 * 60 * 60 * 1000); // Daily cycle
+    QueueNextMessage();
 }
 
-Fortnite.GetStoreData().then(data => {
-    let targetTime = new Date(data.expiration);
-    let timeUntil = targetTime.getTime() - Date.now();
-    setTimeout(PostNextMessage, timeUntil + 5000);
-});
+function QueueNextMessage() {
+    Fortnite.GetStoreData().then(data => {
+        let targetTime = new Date(data.expiration);
+        let timeUntil = targetTime.getTime() - Date.now();
+        setTimeout(PostNextMessage, timeUntil + 5000);
+    });
+}
+
+QueueNextMessage();
 
 client.login(DiscordToken);
