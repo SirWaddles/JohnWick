@@ -101,7 +101,7 @@ client.on('message', msg => {
         GetStoreImages().then(data => {
             var attach = new Discord.Attachment(data, 'shop.png');
             msg.channel.send(attach);
-        });
+        }).catch(e => LogToFile(e));
     }
     if (parts[0] == '!broadcast' && msg.author.id == '229419335930609664') {
         if (parts[1] == 'ts') {
@@ -181,12 +181,20 @@ function PostShopMessage() {
 }
 
 function PostNextMessage() {
-    PostShopMessage();
-    QueueNextMessage();
+    PostShopMessage().then(() => {
+        QueueNextMessage();
+    }).catch(e => {
+        LogToFile(e);
+        console.error(e);
+    });
 }
 
 function QueueNextMessage() {
     Fortnite.GetStoreData().then(data => {
+        if (!data.hasOwnProperty('expiration')) {
+            console.error(data);
+            throw "Invalid data, cannot queue";
+        }
         let targetTime = new Date(data.expiration);
         let timeUntil = targetTime.getTime() - Date.now();
         setTimeout(PostNextMessage, timeUntil + 5000);

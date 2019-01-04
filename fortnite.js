@@ -13,6 +13,10 @@ function RefreshStoreData() {
     return getStoreData().then(store => {
         fs.writeFileSync('store.json', JSON.stringify(store));
         storeData = store;
+        if (!storeData.hasOwnProperty('storefronts')) {
+            console.error(storeData);
+            throw "Invalid store found";
+        }
         return store;
     });
 }

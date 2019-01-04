@@ -143,7 +143,7 @@ function GetStoreImages() {
     return Fortnite.GetStoreData().then(Fortnite.PrepareStoreAssets).then(data => {
         var storeInfo = Fortnite.GetStoreInfo(data);
         return CreateImageTile(storeInfo.map(Fortnite.GetAssetData));
-    }).catch(e => console.error(e));
+    });
 }
 
 exports.GetStoreImages = GetStoreImages;
