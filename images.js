@@ -53,11 +53,29 @@ function ColourToHex(colour) {
     return 'rgba(' + tag2(colour.R) + ', ' + tag2(colour.G) + ', ' + tag2(colour.B) + ', ' + colour.A + ')';
 }
 
+/*function getRowsCols(length) {
+    let rows = Math.min(length, Math.round(Math.sqrt(length)));
+    return {
+        rows: rows,
+        cols: Math.ceil(length / rows),
+    };
+}*/
+
+function getRowsCols(length) {
+    return {
+        rows: Math.ceil(length / 4),
+        cols: 4,
+    };
+}
+
+const HEADER_HEIGHT = 72;
+
 async function CreateImageTile(stData) {
-    var rows = Math.min(stData.length, Math.round(Math.sqrt(stData.length)));
-    var cols = Math.ceil(stData.length / rows);
-    var canvas = Canvas.createCanvas(512 * cols, 512 * rows);
-    var ctx = canvas.getContext('2d');
+    let shopCounts = stData.reduce((acc, v) => {
+        if (!acc.hasOwnProperty(v.shopType)) acc[v.shopType] = 0;
+        acc[v.shopType]++;
+        return acc;
+    }, {});
 
     stData.sort((a, b) => {
         let rarityA, rarityB = 5;
@@ -72,13 +90,34 @@ async function CreateImageTile(stData) {
         return 0;
     });
 
+    let shops = Object.keys(shopCounts).map(v => ({
+        shopType: v,
+        itemLength: shopCounts[v],
+        items: stData.filter(e => e.shopType == v),
+        shopSize: getRowsCols(shopCounts[v]),
+    }));
+
+    let yOffset = HEADER_HEIGHT;
+    shops = shops.map(v => {
+        v.yOffset = yOffset;
+        yOffset += v.shopSize.rows * 512 + HEADER_HEIGHT;
+        v.items = v.items.forEach((e, idx) => {
+            e.orderKey = idx;
+        });
+        return v;
+    });
+
+    var canvas = Canvas.createCanvas(4 * 512, yOffset - HEADER_HEIGHT);
+    var ctx = canvas.getContext('2d');
+
     let vBuckImage = await Canvas.loadImage('resources/images/vbucks.png');
 
-    await Promise.all(stData.map(async (v, idx) => {
-        var row = Math.floor(idx / cols);
-        var col = idx % cols;
+    await Promise.all(stData.map(async (v) => {
+        let [shop] = shops.filter(e => e.shopType == v.shopType);
+        var row = Math.floor(v.orderKey / shop.shopSize.cols);
+        var col = v.orderKey % shop.shopSize.cols;
         var xOff = 512 * col;
-        var yOff = 512 * row;
+        var yOff = 512 * row + shop.yOffset;
 
         ctx.textAlign = 'center';
         ctx.fillStyle = '#fff';
@@ -145,5 +184,9 @@ function GetStoreImages() {
         return CreateImageTile(storeInfo.map(Fortnite.GetAssetData));
     }).catch(e => console.error(e));
 }
+
+GetStoreImages().then(v => {
+    fs.writeFileSync('./test.png', v);
+});
 
 exports.GetStoreImages = GetStoreImages;

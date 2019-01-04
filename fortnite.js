@@ -4,10 +4,10 @@ const { atob } = require('abab');
 const { PakExtractor } = require('john-wick-extra/extract');
 const { GetItemPaths, AddAsset, ProcessItems } = require('john-wick-extra/process');
 const { ReadAsset, Texture2D } = require('john-wick-extra/parse');
-const { getStoreData } = require('./api');
+//const { getStoreData } = require('./api');
 
 var storeData = false;
-//storeData = JSON.parse(fs.readFileSync('store.json'));
+storeData = JSON.parse(fs.readFileSync('store.json'));
 
 function RefreshStoreData() {
     return getStoreData().then(store => {
@@ -18,7 +18,7 @@ function RefreshStoreData() {
 }
 
 function GetStoreData() {
-    //return Promise.resolve(storeData);
+    return Promise.resolve(storeData);
     if (!storeData) return RefreshStoreData();
     var now = new Date();
     var expires = new Date(storeData.expiration);
@@ -26,14 +26,9 @@ function GetStoreData() {
     return Promise.resolve(storeData);
 }
 
-function GetStoreItems(storeData) {
-    return storeData.storefronts.filter(v => v.name == 'BRDailyStorefront' || v.name == 'BRWeeklyStorefront').map(v => v.catalogEntries).reduce((acc, v) => acc.concat(v), []).map(v => v.devName);
-}
-
 function GetStoreInfo(storeData) {
     return storeData.storefronts.filter(v => v.name == 'BRDailyStorefront' || v.name == 'BRWeeklyStorefront')
-        .map(v => v.catalogEntries)
-        .reduce((acc, v) => acc.concat(v), []);
+        .reduce((acc, v) => acc.concat(v.catalogEntries.map(e => Object.assign(e, {shopType: v.name}))), []);
 }
 
 // from https://stackoverflow.com/questions/39460182/decode-base64-to-hexadecimal-string-with-javascript
@@ -142,6 +137,9 @@ function GetAssetData(storeItem) {
                 if (daAsset && fs.existsSync('textures/' + daAsset.image)) storeObj.imagePath = daAsset.image;
             }
 
+            if (storeItem.shopType == 'BRDailyStorefront') storeObj.shopType = 'daily';
+            if (storeItem.shopType == 'BRWeeklyStorefront') storeObj.shopType = 'featured';
+
             return storeObj;
         }
     } catch (error) {
@@ -156,23 +154,7 @@ function GetAssetData(storeItem) {
     return false;
 }
 
-function GetChangeData(changeItem) {
-    return {
-        imagePath: changeItem.image,
-        displayName: changeItem.name,
-        rarity: changeItem.rarity,
-        description: changeItem.description,
-    };
-}
-
-function GetChangeItems() {
-    if (!fs.existsSync('changelist.json')) return [];
-    return JSON.parse(fs.readFileSync('changelist.json')).map(GetChangeData);
-}
-
-exports.GetChangeItems = GetChangeItems;
 exports.GetAssetData = GetAssetData;
 exports.GetStoreData = GetStoreData;
-exports.GetStoreItems = GetStoreItems;
 exports.GetStoreInfo = GetStoreInfo;
 exports.PrepareStoreAssets = PrepareStoreAssets;
