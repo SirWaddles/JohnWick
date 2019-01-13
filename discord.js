@@ -5,6 +5,7 @@ const Fortnite = require('./fortnite');
 const { GetStoreImages } = require('./images');
 const { DiscordToken } = require('./tokens');
 const { TSMessageHandle, SendServerImage } = require('./teamspeak');
+const { submitRedditShop } = require('./reddit');
 
 var subbedChannels = [];
 var logStream = fs.createWriteStream('errors.txt', {flags: 'a'});
@@ -164,6 +165,7 @@ function PostShopMessage() {
     return GetStoreImages().then(data => {
         let fileName = GetFileName();
         fs.writeFileSync('./store_images/' + fileName, data);
+        submitRedditShop("https://johnwickbot.shop/" + fileName);
         var channelList = subbedChannels.filter(v => v.type == 'image').map(v => v.channel);
         client.channels.forEach(channel => {
             if (channelList.includes(channel.id)) {

@@ -123,12 +123,18 @@ function getExchangeToken(code) {
             token_type: "eg1",
         }),
         method: "POST",
-    }).then(r => r.json()).then(r => ({
-        access_token: r.access_token,
-        refresh_token: r.refresh_token,
-        expires_at: r.expires_at,
-        refresh_expires_at: r.refresh_expires_at,
-    }));
+    }).then(r => r.json()).then(r => {
+        if (!r.hasOwnProperty('access_token')) {
+            console.error('No access token found while getting exchange code');
+            console.error(r);
+        }
+        return {
+            access_token: r.access_token,
+            refresh_token: r.refresh_token,
+            expires_at: r.expires_at,
+            refresh_expires_at: r.refresh_expires_at,
+        }
+    });
 }
 
 function getRefreshToken(token) {
@@ -143,16 +149,22 @@ function getRefreshToken(token) {
             refresh_token: token.refresh_token,
             includePerms: true,
         }),
-    }).then(r => r.json()).then(r => ({
-        access_token: r.access_token,
-        refresh_token: r.refresh_token,
-        expires_at: r.expires_at,
-        refresh_expires_at: r.refresh_expires_at,
-    }));
+    }).then(r => r.json()).then(r => {
+        if (!r.hasOwnProperty('access_token')) {
+            console.error('No access token found while refreshing');
+            console.error(r);
+        }
+        return {
+            access_token: r.access_token,
+            refresh_token: r.refresh_token,
+            expires_at: r.expires_at,
+            refresh_expires_at: r.refresh_expires_at,
+        }
+    });
 }
 
-function refreshToken(token) {
-    if (!token) return getLoginToken();
+async function refreshToken(token) {
+    if (!token || typeof token.access_token == 'undefined') return getLoginToken();
     let refreshExpire = new Date(token.refresh_expires_at);
     if (Date.now() > refreshExpire) return getLoginToken();
     let accessExpire = new Date(token.expires_at);
