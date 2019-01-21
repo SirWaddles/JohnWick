@@ -1,6 +1,8 @@
 const fs = require('fs');
 const Fortnite = require('./fortnite');
 const Canvas = require('canvas');
+const { getLastAppeared, getAppearanceCount } = require('./db');
+const moment = require('moment');
 
 Canvas.registerFont('resources/fonts/LuckiestGuy-Regular.ttf', { family: 'Luckiest Guy'});
 Canvas.registerFont('resources/fonts/OpenSans-Regular.ttf', { family: 'Open Sans'});
@@ -56,7 +58,7 @@ function ColourToHex(colour) {
 async function CreateImageTile(stData) {
     var rows = Math.min(stData.length, Math.round(Math.sqrt(stData.length)));
     var cols = Math.ceil(stData.length / rows);
-    var canvas = Canvas.createCanvas(512 * cols, 512 * rows);
+    var canvas = Canvas.createCanvas(512 * cols, 576 * rows);
     var ctx = canvas.getContext('2d');
 
     stData.sort((a, b) => {
@@ -75,10 +77,13 @@ async function CreateImageTile(stData) {
     let vBuckImage = await Canvas.loadImage('resources/images/vbucks.png');
 
     await Promise.all(stData.map(async (v, idx) => {
+        let lastAppeared = await getLastAppeared(v.id);
+        let appearanceCount = await getAppearanceCount(v.id);
+        let lastAppearedStr = lastAppeared ? ("Last Apperance: " + moment(lastAppeared).format('Do MMMM')) : "First Appearance";
         var row = Math.floor(idx / cols);
         var col = idx % cols;
         var xOff = 512 * col;
-        var yOff = 512 * row;
+        var yOff = 576 * row;
 
         ctx.textAlign = 'center';
         ctx.fillStyle = '#fff';
@@ -98,7 +103,7 @@ async function CreateImageTile(stData) {
             gradient.addColorStop(0, RarityColours[v.rarity][0]);
             gradient.addColorStop(1, RarityColours[v.rarity][1]);
             ctx.fillStyle = gradient;
-            ctx.fillRect(xOff, yOff, 512, 512);
+            ctx.fillRect(xOff, yOff, 512, 576);
         }
         ctx.drawImage(image, xOff, yOff, 512, 512);
         ctx.fillStyle = "#fff";
@@ -115,6 +120,9 @@ async function CreateImageTile(stData) {
             writeStrs.forEach((str, idx) => {
                 ctx.fillText(str, xOff + 20, yOff + 518 + (idx * 20) - writeStrs.length * 20);
             });
+
+            ctx.fillText("Appearances: " + appearanceCount, xOff + 20, yOff + 530);
+            ctx.fillText(lastAppearedStr, xOff + 20, yOff + 550);
         }
 
         if (v.hasOwnProperty('price') && v.price) {
@@ -139,11 +147,13 @@ async function CreateImageTile(stData) {
     return canvas.toBuffer();
 }
 
-function GetStoreImages() {
+function GetStoreImages(save) {
     return Fortnite.GetStoreData().then(Fortnite.PrepareStoreAssets).then(data => {
         var storeInfo = Fortnite.GetStoreInfo(data);
-        return CreateImageTile(storeInfo.map(Fortnite.GetAssetData));
+        return CreateImageTile(storeInfo.map((item) => Fortnite.GetAssetData(item, save)));
     });
 }
+
+GetStoreImages(true).then(data => fs.writeFileSync('./test.png', data));
 
 exports.GetStoreImages = GetStoreImages;

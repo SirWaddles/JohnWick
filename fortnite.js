@@ -5,6 +5,7 @@ const { PakExtractor } = require('john-wick-extra/extract');
 const { GetItemPaths, AddAsset, ProcessItems } = require('john-wick-extra/process');
 const { ReadAsset, Texture2D } = require('john-wick-extra/parse');
 const { getStoreData } = require('./api');
+const { addShopHistory } = require('./db');
 
 var storeData = false;
 //storeData = JSON.parse(fs.readFileSync('store.json'));
@@ -115,6 +116,7 @@ function GetAssetItemData(assetList, assetKey) {
     let [assetData] = assetList.filter(v => v.id == assetPath[1]);
     if (!assetData) return false;
     return {
+        id: assetData.id,
         imagePath: assetData.image,
         displayName: assetData.name,
         rarity: assetData.rarity,
@@ -122,7 +124,7 @@ function GetAssetItemData(assetList, assetKey) {
     };
 }
 
-function GetAssetData(storeItem) {
+function GetAssetData(storeItem, save) {
     const assetList = JSON.parse(fs.readFileSync('./assets.json'));
     try {
         if (storeItem.hasOwnProperty('itemGrants') && storeItem.itemGrants.length > 0) {
@@ -139,6 +141,8 @@ function GetAssetData(storeItem) {
             let storeObj = storeObjs.shift();
             storeObj.price = price;
             storeObj.extraItems = storeObjs;
+
+            if (save) addShopHistory(storeObj.id);
 
             if (storeItem.hasOwnProperty('displayAssetPath')) {
                 let daPath = path.basename(storeItem.displayAssetPath).split('.')[0].toLowerCase();
@@ -160,21 +164,6 @@ function GetAssetData(storeItem) {
     return false;
 }
 
-function GetChangeData(changeItem) {
-    return {
-        imagePath: changeItem.image,
-        displayName: changeItem.name,
-        rarity: changeItem.rarity,
-        description: changeItem.description,
-    };
-}
-
-function GetChangeItems() {
-    if (!fs.existsSync('changelist.json')) return [];
-    return JSON.parse(fs.readFileSync('changelist.json')).map(GetChangeData);
-}
-
-exports.GetChangeItems = GetChangeItems;
 exports.GetAssetData = GetAssetData;
 exports.GetStoreData = GetStoreData;
 exports.GetStoreItems = GetStoreItems;

@@ -8,3 +8,4 @@ channels.json
 tokens.js
 live/paks/*
 live/assets/*
+store.db

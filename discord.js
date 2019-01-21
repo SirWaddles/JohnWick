@@ -99,7 +99,7 @@ client.on('message', msg => {
             GetTextMessage().then(message => msg.channel.send(message));
             return;
         }
-        GetStoreImages().then(data => {
+        GetStoreImages(false).then(data => {
             var attach = new Discord.Attachment(data, 'shop.png');
             msg.channel.send(attach);
         }).catch(e => LogToFile(e));
@@ -162,7 +162,7 @@ function PostShopMessage() {
             }
         });
     });
-    return GetStoreImages().then(data => {
+    return GetStoreImages(true).then(data => {
         let fileName = GetFileName();
         fs.writeFileSync('./store_images/' + fileName, data);
         submitRedditShop("https://johnwickbot.shop/" + fileName);
