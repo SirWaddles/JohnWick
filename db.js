@@ -12,7 +12,8 @@ exports.addShopHistory = addShopHistory;
 
 function getLastAppeared(item_id) {
     return new Promise((resolve, reject) => {
-        db.all('SELECT date_appeared FROM shop_history WHERE item_id = ? ORDER BY date_appeared DESC LIMIT 1', item_id, (err, row) => {
+        let dateFilter = Date.now() - (23 * 60 * 60 * 1000);
+        db.all('SELECT date_appeared FROM shop_history WHERE item_id = ? AND date_appeared < ? ORDER BY date_appeared DESC LIMIT 1', item_id, dateFilter, (err, row) => {
             if (err) {
                 reject('SQL Error');
                 return;
