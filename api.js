@@ -102,6 +102,9 @@ function getAccessToken() {
 }
 
 function getAccessCode(access_token) {
+    if (typeof access_token == 'undefined') {
+        throw "Access Token For Code Undefined";
+    }
     return fetch(OAUTH_EXCHANGE, {
         headers: {
             "Authorization": "bearer " + access_token,
@@ -111,6 +114,9 @@ function getAccessCode(access_token) {
 }
 
 function getExchangeToken(code) {
+    if (typeof code == 'undefined') {
+        throw "Exchange Token Undefined";
+    }
     return fetch(OAUTH_TOKEN, {
         headers: {
             "Authorization": "basic " + FortniteToken[3],
@@ -138,6 +144,9 @@ function getExchangeToken(code) {
 }
 
 function getRefreshToken(token) {
+    if (typeof token == 'undefined' || !token.hasOwnProperty('refresh_token')) {
+        throw "Refresh token undefined";
+    }
     return fetch(OAUTH_TOKEN, {
         headers: {
             "Authorization": "basic " + FortniteToken[3],
@@ -164,12 +173,7 @@ function getRefreshToken(token) {
 }
 
 async function refreshToken(token) {
-    if (!token || typeof token.access_token == 'undefined') return getLoginToken();
-    let refreshExpire = new Date(token.refresh_expires_at);
-    if (Date.now() > refreshExpire) return getLoginToken();
-    let accessExpire = new Date(token.expires_at);
-    if (Date.now() > accessExpire) return getRefreshToken(token);
-    return token;
+    return getLoginToken();
 }
 
 async function getLoginToken() {

@@ -154,6 +154,4 @@ function GetStoreImages(save) {
     });
 }
 
-GetStoreImages(true).then(data => fs.writeFileSync('./test.png', data));
-
 exports.GetStoreImages = GetStoreImages;
