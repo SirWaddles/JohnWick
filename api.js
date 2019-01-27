@@ -8,6 +8,7 @@ const OAUTH_EXCHANGE = "https://account-public-service-prod03.ol.epicgames.com/a
 const LAUNCHER_LOGIN = "https://accounts.launcher-website-prod07.ol.epicgames.com/login/doLauncherLogin";
 const LAUNCHER_WAIT = "https://accounts.launcher-website-prod07.ol.epicgames.com/login/showPleaseWait";
 const FORTNITE_STORE = "https://fortnite-public-service-prod11.ol.epicgames.com/fortnite/api/storefront/v2/catalog";
+const FORTNITE_KEYCHAIN = "https://fortnite-public-service-prod11.ol.epicgames.com/fortnite/api/storefront/v2/keychain";
 
 function getClientCredentials() {
     return fetch(OAUTH_TOKEN, {
@@ -173,6 +174,9 @@ function getRefreshToken(token) {
 }
 
 async function refreshToken(token) {
+    if (!token) return getLoginToken();
+    let expire = new Date(token.expires_at);
+    if (Date.now() < expire) return token;
     return getLoginToken();
 }
 
@@ -196,4 +200,16 @@ async function getStoreData() {
     }).then(r => r.json());
 }
 
+async function getKeychain() {
+    loginToken = await refreshToken();
+    return fetch(FORTNITE_KEYCHAIN, {
+        headers: {
+            "X-EpicGames-Language": "en",
+            "Authorization": "bearer " + loginToken.access_token,
+        },
+        method: "GET",
+    }).then(r => r.json());
+}
+
 exports.getStoreData = getStoreData;
+exports.getKeychain = getKeychain;

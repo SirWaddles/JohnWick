@@ -4,7 +4,7 @@ const { atob } = require('abab');
 const { PakExtractor } = require('john-wick-extra/extract');
 const { GetItemPaths, AddAsset, ProcessItems } = require('john-wick-extra/process');
 const { ReadAsset, Texture2D } = require('john-wick-extra/parse');
-const { getStoreData } = require('./api');
+const { getStoreData, getKeychain } = require('./api');
 const { addShopHistory } = require('./db');
 
 var storeData = false;
@@ -64,6 +64,11 @@ function BuildPakMap() {
     });
 }
 
+function guidStringParse(str) {
+    let e = str.split(':');
+    return {guid: e[0].toLowerCase(), key: base64ToBase16(e[1]), asset: e[2]};
+}
+
 async function PrepareStoreAssets(storeData) {
     let storeInfo = await storeData;
     let keyDatas = storeInfo.storefronts
@@ -71,7 +76,10 @@ async function PrepareStoreAssets(storeData) {
         .reduce((acc, v) => acc.concat(v.catalogEntries), [])
         .filter(v => v.hasOwnProperty('metaInfo') && v.metaInfo.map(e => e.key).includes("EncryptionKey"))
         .map(v => v.metaInfo.filter(e => e.key == 'EncryptionKey').pop().value)
-        .reduce((acc, v) => acc.concat(v.split(',').map(e => e.split(':')).map(e => ({guid: e[0].toLowerCase(), key: base64ToBase16(e[1]), asset: e[2]}))), []);
+        .reduce((acc, v) => acc.concat(v.split(',').map(guidStringParse)), []);
+
+    let chainData = await getKeychain();
+    keyDatas = keyDatas.concat(chainData.map(guidStringParse));
 
     if (keyDatas.length <= 0) return storeInfo;
     let guidList = keyDatas.map(v => v.guid);
@@ -84,6 +92,7 @@ async function PrepareStoreAssets(storeData) {
         for (let i = 0; i < paths.length; i++) {
             let filepath = paths[i];
             let filename = filepath.split('/').pop().toLowerCase();
+            if (fs.existsSync('./live/assets/' + filename)) continue;
             let file = v.extractor.getFileFromPath(filepath);
             fs.writeFileSync('./live/assets/' + filename, file);
             assetFiles.push(filename);
