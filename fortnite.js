@@ -4,7 +4,7 @@ const { atob } = require('abab');
 const { PakExtractor } = require('john-wick-extra/extract');
 const { GetItemPaths, AddAsset, ProcessItems } = require('john-wick-extra/process');
 const { ReadAsset, Texture2D } = require('john-wick-extra/parse');
-const { getStoreData } = require('./api');
+const { getStoreData, getKeychain } = require('./api');
 const { addShopHistory } = require('./db');
 
 var storeData = false;
@@ -64,6 +64,11 @@ function BuildPakMap() {
     });
 }
 
+function guidStringParse(str) {
+    let e = str.split(':');
+    return {guid: e[0].toLowerCase(), key: base64ToBase16(e[1]), asset: e[2]};
+}
+
 async function PrepareStoreAssets(storeData) {
     let storeInfo = await storeData;
     let keyDatas = storeInfo.storefronts
@@ -71,7 +76,14 @@ async function PrepareStoreAssets(storeData) {
         .reduce((acc, v) => acc.concat(v.catalogEntries), [])
         .filter(v => v.hasOwnProperty('metaInfo') && v.metaInfo.map(e => e.key).includes("EncryptionKey"))
         .map(v => v.metaInfo.filter(e => e.key == 'EncryptionKey').pop().value)
-        .reduce((acc, v) => acc.concat(v.split(',').map(e => e.split(':')).map(e => ({guid: e[0].toLowerCase(), key: base64ToBase16(e[1]), asset: e[2]}))), []);
+        .reduce((acc, v) => acc.concat(v.split(',').map(guidStringParse)), []);
+
+    try {
+        let chainData = await getKeychain();
+        keyDatas = keyDatas.concat(chainData.map(guidStringParse));
+    } catch (e) {
+        console.error(e);
+    }
 
     if (keyDatas.length <= 0) return storeInfo;
     let guidList = keyDatas.map(v => v.guid);
@@ -84,9 +96,10 @@ async function PrepareStoreAssets(storeData) {
         for (let i = 0; i < paths.length; i++) {
             let filepath = paths[i];
             let filename = filepath.split('/').pop().toLowerCase();
+            assetFiles.push(filename);
+            if (fs.existsSync('./live/assets/' + filename)) continue;
             let file = v.extractor.getFileFromPath(filepath);
             fs.writeFileSync('./live/assets/' + filename, file);
-            assetFiles.push(filename);
         }
     });
 
@@ -97,7 +110,9 @@ async function PrepareStoreAssets(storeData) {
         let asset = ReadAsset('./live/assets/' + fileAsset);
         if (asset instanceof Texture2D) {
             let tPath = './textures/' + fileAsset + '.png';
-            await asset.textures.pop().writeFile(tPath);
+            if (!fs.existsSync(tPath)) {
+                await asset.textures.pop().writeFile(tPath);
+            }
         }
         AddAsset(asset, fileAsset);
     }
@@ -135,14 +150,14 @@ function GetAssetData(storeItem, save) {
                 price = storeItem.dynamicBundleInfo.bundleItems.map(v => v.discountedPrice).reduce((acc, v) => acc + v, 0);
             }
 
-            let storeObjs = storeItem.itemGrants.map(v => GetAssetItemData(assetList, v.templateId));
+            let storeObjs = storeItem.itemGrants.map(v => GetAssetItemData(assetList, v.templateId)).filter(v => v);
 
-            if (storeObjs.length <= 0) throw "No asset found for " + storeItem.devName;
+            if (storeObjs.length <= 0 || !storeObjs) throw "No asset found for " + storeItem.devName;
             let storeObj = storeObjs.shift();
             storeObj.price = price;
             storeObj.extraItems = storeObjs;
 
-            if (save) addShopHistory(storeObj.id);
+            if (save && storeObj.hasOwnProperty('id')) addShopHistory(storeObj.id);
 
             if (storeItem.hasOwnProperty('displayAssetPath')) {
                 let daPath = path.basename(storeItem.displayAssetPath).split('.')[0].toLowerCase();
@@ -153,12 +168,14 @@ function GetAssetData(storeItem, save) {
             return storeObj;
         }
     } catch (error) {
-        console.error(error);
+        let devMatch = /\[VIRTUAL\][1-9]+ x ([\w\d\s]+) for/g;
+        let result = devMatch.exec(storeItem.devName);
         return {
+            id: 'error_asset',
             imagePath: false,
-            displayName: storeItem.devName,
+            displayName: result[1] ? result[1] : storeItem.devName,
             price: storeItem.prices[0].finalPrice,
-            rarity: false,
+            rarity: 'Uncommon',
         };
     }
     return false;

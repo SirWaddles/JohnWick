@@ -8,6 +8,7 @@ const OAUTH_EXCHANGE = "https://account-public-service-prod03.ol.epicgames.com/a
 const LAUNCHER_LOGIN = "https://accounts.launcher-website-prod07.ol.epicgames.com/login/doLauncherLogin";
 const LAUNCHER_WAIT = "https://accounts.launcher-website-prod07.ol.epicgames.com/login/showPleaseWait";
 const FORTNITE_STORE = "https://fortnite-public-service-prod11.ol.epicgames.com/fortnite/api/storefront/v2/catalog";
+const FORTNITE_KEYCHAIN = "https://fortnite-public-service-prod11.ol.epicgames.com/fortnite/api/storefront/v2/keychain";
 
 function getClientCredentials() {
     return fetch(OAUTH_TOKEN, {
@@ -102,6 +103,9 @@ function getAccessToken() {
 }
 
 function getAccessCode(access_token) {
+    if (typeof access_token == 'undefined') {
+        throw "Access Token For Code Undefined";
+    }
     return fetch(OAUTH_EXCHANGE, {
         headers: {
             "Authorization": "bearer " + access_token,
@@ -111,6 +115,9 @@ function getAccessCode(access_token) {
 }
 
 function getExchangeToken(code) {
+    if (typeof code == 'undefined') {
+        throw "Exchange Token Undefined";
+    }
     return fetch(OAUTH_TOKEN, {
         headers: {
             "Authorization": "basic " + FortniteToken[3],
@@ -138,6 +145,9 @@ function getExchangeToken(code) {
 }
 
 function getRefreshToken(token) {
+    if (typeof token == 'undefined' || !token.hasOwnProperty('refresh_token')) {
+        throw "Refresh token undefined";
+    }
     return fetch(OAUTH_TOKEN, {
         headers: {
             "Authorization": "basic " + FortniteToken[3],
@@ -164,12 +174,10 @@ function getRefreshToken(token) {
 }
 
 async function refreshToken(token) {
-    if (!token || typeof token.access_token == 'undefined') return getLoginToken();
-    let refreshExpire = new Date(token.refresh_expires_at);
-    if (Date.now() > refreshExpire) return getLoginToken();
-    let accessExpire = new Date(token.expires_at);
-    if (Date.now() > accessExpire) return getRefreshToken(token);
-    return token;
+    if (!token) return getLoginToken();
+    let expire = new Date(token.expires_at);
+    if (Date.now() < expire) return token;
+    return getLoginToken();
 }
 
 async function getLoginToken() {
@@ -192,4 +200,16 @@ async function getStoreData() {
     }).then(r => r.json());
 }
 
+async function getKeychain() {
+    loginToken = await refreshToken();
+    return fetch(FORTNITE_KEYCHAIN, {
+        headers: {
+            "X-EpicGames-Language": "en",
+            "Authorization": "bearer " + loginToken.access_token,
+        },
+        method: "GET",
+    }).then(r => r.json());
+}
+
 exports.getStoreData = getStoreData;
+exports.getKeychain = getKeychain;
