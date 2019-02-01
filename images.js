@@ -93,11 +93,7 @@ async function CreateImageTile(stData) {
         if (filePath) {
             filePath = 'textures/' + filePath;
         }
-        if (!filePath || !fs.existsSync(filePath)) {
-            return Promise.resolve(true);
-        }
 
-        let image = await Canvas.loadImage(filePath);
         if (v.rarity) {
             var gradient = ctx.createRadialGradient(xOff + 256, yOff + 256, 128, xOff + 256, yOff + 256, 384);
             gradient.addColorStop(0, RarityColours[v.rarity][0]);
@@ -105,7 +101,12 @@ async function CreateImageTile(stData) {
             ctx.fillStyle = gradient;
             ctx.fillRect(xOff, yOff, 512, 576);
         }
-        ctx.drawImage(image, xOff, yOff, 512, 512);
+
+        if (filePath && fs.existsSync(filePath)) {
+            let image = await Canvas.loadImage(filePath);
+            ctx.drawImage(image, xOff, yOff, 512, 512);
+        }
+
         ctx.fillStyle = "#fff";
 
         ctx.textAlign = 'center';

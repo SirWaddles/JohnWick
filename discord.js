@@ -95,10 +95,6 @@ client.on('message', msg => {
         return;
     }
     if (parts[0] == '!shop') {
-        if (parts.length > 1 && parts[1] == 'text') {
-            GetTextMessage().then(message => msg.channel.send(message));
-            return;
-        }
         GetStoreImages(false).then(data => {
             var attach = new Discord.Attachment(data, 'shop.png');
             msg.channel.send(attach);
@@ -129,13 +125,6 @@ client.on('message', msg => {
     }
 });
 
-function GetTextMessage() {
-    return Fortnite.GetStoreData().then(data => {
-        var storeInfo = Fortnite.GetStoreInfo(data);
-        return message = "```\n" + storeInfo.map(Fortnite.GetAssetData).map(v => v.displayName + " - " + v.price).join("\n") + "\n```";
-    });
-}
-
 function GetFileName() {
     var now = new Date();
     var fileName = now.getFullYear() + '_' + now.getMonth() + '_' + now.getDate() + '.png';
@@ -148,20 +137,6 @@ function GetFileName() {
 }
 
 function PostShopMessage() {
-    GetTextMessage().then(message => {
-        var channelList = subbedChannels.filter(v => v.type == 'text').map(v => v.channel);
-        client.channels.forEach(channel => {
-            if (channelList.includes(channel.id)) {
-                channel.send(message).catch(error => {
-                    LogToFile(error);
-                    LogToFile(channel.id);
-                    // Probably missing permissions
-                    //subbedChannels = subbedChannels.filter(v => v.channel != channel.id);
-                    //SaveChannelFile();
-                });
-            }
-        });
-    });
     return GetStoreImages(true).then(data => {
         let fileName = GetFileName();
         fs.writeFileSync('./store_images/' + fileName, data);
@@ -172,13 +147,9 @@ function PostShopMessage() {
                 channel.send("https://johnwickbot.shop/" + fileName).catch(error => {
                     LogToFile(error);
                     LogToFile(channel.id);
-                    //subbedChannels = subbedChannels.filter(v => v.channel != channel.id);
-                    //SaveChannelFile();
                 });
             }
         });
-        //let tsList = subbedChannels.filter(v => v.type == 'teamspeak');
-        //SendServerImage(tsList, "https://johnwick.genj.io/" + fileName);
     });
 }
 
