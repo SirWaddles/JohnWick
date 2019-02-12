@@ -1,11 +1,9 @@
 const fs = require('fs');
 const Discord = require('discord.js');
 const client = new Discord.Client();
-const Fortnite = require('./fortnite');
-const { GetStoreImages } = require('./images');
+const IPCClient = require('./client');
 const { DiscordToken } = require('./tokens');
 const { TSMessageHandle, SendServerImage } = require('./teamspeak');
-const { submitRedditShop } = require('./reddit');
 
 var subbedChannels = [];
 var logStream = fs.createWriteStream('errors.txt', {flags: 'a'});
@@ -94,11 +92,11 @@ client.on('message', msg => {
         msg.channel.send(attach);
         return;
     }
-    if (parts[0] == '!shop') {
-        GetStoreImages(false).then(data => {
+    if (parts[0] == '!shop' && msg.author.id == '229419335930609664') {
+        IPCClient.GetImage().then(data => {
             var attach = new Discord.Attachment(data, 'shop.png');
             msg.channel.send(attach);
-        }).catch(e => LogToFile(e));
+        });
     }
     if (parts[0] == '!broadcast' && msg.author.id == '229419335930609664') {
         if (parts[1] == 'ts') {
@@ -107,7 +105,7 @@ client.on('message', msg => {
             return;
         }
         if (parts[1] == 'shop') {
-            PostShopMessage();
+            PostShopMessage(GetFileName());
             return;
         }
         if (parts[1] == 'empty_servers') {
@@ -128,52 +126,21 @@ client.on('message', msg => {
 function GetFileName() {
     var now = new Date();
     var fileName = now.getFullYear() + '_' + now.getMonth() + '_' + now.getDate() + '.png';
-    let nonce = 1;
-    while (fs.existsSync('./store_images/' + fileName)) {
-        fileName = now.getFullYear() + '_' + now.getMonth() + '_' + now.getDate() + '_' + nonce + '.png';
-        nonce++;
-    }
     return fileName;
 }
 
-function PostShopMessage() {
-    return GetStoreImages(true).then(data => {
-        let fileName = GetFileName();
-        fs.writeFileSync('./store_images/' + fileName, data);
-        submitRedditShop("https://johnwickbot.shop/" + fileName);
-        var channelList = subbedChannels.filter(v => v.type == 'image').map(v => v.channel);
-        client.channels.forEach(channel => {
-            if (channelList.includes(channel.id)) {
-                channel.send("https://johnwickbot.shop/" + fileName).catch(error => {
-                    LogToFile(error);
-                    LogToFile(channel.id);
-                });
-            }
-        });
-    });
-}
-
-function PostNextMessage() {
-    PostShopMessage().then(() => {
-        QueueNextMessage();
-    }).catch(e => {
-        LogToFile(e);
-        console.error(e);
-    });
-}
-
-function QueueNextMessage() {
-    Fortnite.GetStoreData().then(data => {
-        if (!data.hasOwnProperty('expiration')) {
-            console.error(data);
-            throw "Invalid data, cannot queue";
+function PostShopMessage(fileName) {
+    var channelList = subbedChannels.filter(v => v.type == 'image').map(v => v.channel);
+    client.channels.forEach(channel => {
+        if (channelList.includes(channel.id)) {
+            channel.send("https://johnwickbot.shop/" + fileName).catch(error => {
+                LogToFile(error);
+                LogToFile(channel.id);
+            });
         }
-        let targetTime = new Date(data.expiration);
-        let timeUntil = targetTime.getTime() - Date.now();
-        setTimeout(PostNextMessage, timeUntil + 5000);
     });
 }
 
-QueueNextMessage();
+IPCClient.AddImageHook((fileName) => PostShopMessage(fileName));
 
 client.login(DiscordToken);

@@ -1,5 +1,6 @@
 const snoowrap = require('snoowrap');
 const { RedditToken } = require('./tokens');
+const IPCClient = require('./client');
 
 const r = new snoowrap({
   userAgent: 'node:john-wick:0.1.0 (by /u/SirWaddlesworth)',
@@ -17,4 +18,6 @@ function submitRedditShop(link) {
     });
 }
 
-exports.submitRedditShop = submitRedditShop;
+IPCClient.AddImageHook((path) => {
+    submitRedditShop("https://johnwickbot.shop/" + path);
+});
