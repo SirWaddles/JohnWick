@@ -1,9 +1,8 @@
 const fs = require('fs');
 const path = require('path');
 const { atob } = require('abab');
-const { PakExtractor } = require('john-wick-extra/extract');
-const { GetItemPaths, AddAsset, ProcessItems } = require('john-wick-extra/process');
-const { ReadAsset, Texture2D } = require('john-wick-extra/parse');
+const { PakExtractor, read_asset, read_texture_to_file, read_pak_key } = require('node-wick');
+const { GetItemPaths, AddAsset, ProcessItems } = require('./process');
 const { getStoreData, getKeychain } = require('./api');
 const { addShopHistory } = require('./db');
 
@@ -54,12 +53,11 @@ function base64ToBase16(base64) {
 
 function BuildPakMap() {
     return fs.readdirSync('./live/paks/', 'utf8').map(v => {
-        let extractor = new PakExtractor('./live/paks/' + v);
-        extractor.readHeader();
+        let filepath = './live/paks/' + v;
         return {
             file: v,
-            guid: extractor.header.EncryptionKeyGuid.toString(),
-            extractor: extractor,
+            filepath: filepath,
+            guid: read_pak_key(filepath),
         };
     });
 }
@@ -90,15 +88,26 @@ async function PrepareStoreAssets(storeData) {
     let pakMap = BuildPakMap().filter(v => guidList.includes(v.guid));
     let assetFiles = [];
     pakMap.forEach(v => {
-        v.extractor.replaceKey(keyDatas.filter(e => e.guid == v.guid).pop().key);
-        v.extractor.readIndex();
-        let paths = GetItemPaths(v.extractor.getPaths());
+        let pakKey = keyDatas.filter(e => e.guid == v.guid).pop().key;
+        let extractor = false;
+        try {
+            extractor = new PakExtractor(v.filepath, pakKey);
+        } catch (e) {
+            console.error(e);
+            continue;
+        }
+
+        let paths = extractor.get_file_list().map((v, idx) => ({
+            path: v,
+            index: idx,
+        }));
+        paths = GetItemPaths(paths);
         for (let i = 0; i < paths.length; i++) {
             let filepath = paths[i];
-            let filename = filepath.split('/').pop().toLowerCase();
+            let filename = filepath.path.split('/').pop().toLowerCase();
             assetFiles.push(filename);
             if (fs.existsSync('./live/assets/' + filename)) continue;
-            let file = v.extractor.getFileFromPath(filepath);
+            let file = extractor.get_file(filepath.index);
             fs.writeFileSync('./live/assets/' + filename, file);
         }
     });
@@ -107,14 +116,21 @@ async function PrepareStoreAssets(storeData) {
         let filename = assetFiles[i];
         if (filename.endsWith('.uexp')) continue;
         let fileAsset = filename.slice(0, -7);
-        let asset = ReadAsset('./live/assets/' + fileAsset);
-        if (asset instanceof Texture2D) {
+        let asset = false;
+        try {
+            asset = read_asset('./live/assets/' + fileAsset);
+        } catch (e) {
+            console.error(e);
+            continue;
+        }
+        let object = asset[0];
+        if (object.export_type == "Texture2D") {
             let tPath = './textures/' + fileAsset + '.png';
             if (!fs.existsSync(tPath)) {
-                await asset.textures.pop().writeFile(tPath);
+                read_texture_to_file('./live/assets/' + fileAsset, tPath);
             }
         }
-        AddAsset(asset, fileAsset);
+        AddAsset(object, fileAsset);
     }
 
     let assets = ProcessItems();
