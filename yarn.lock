@@ -486,10 +486,10 @@ node-pre-gyp@^0.12.0:
     semver "^5.3.0"
     tar "^4"
 
-node-wick@^0.3.1:
-  version "0.3.1"
-  resolved "https://registry.yarnpkg.com/node-wick/-/node-wick-0.3.1.tgz#7b1d6559707f301fa34256d26492effee1b2cdaa"
-  integrity sha512-pXMuUEzs4/UQHAvJj4oK+o44dv4txVgWyN+KZqFrHeOvP/DMRIr8GNsZLlLtNq7mbukDEQa0AQgl95H1Ew6qxg==
+node-wick@^0.4.0:
+  version "0.4.0"
+  resolved "https://registry.yarnpkg.com/node-wick/-/node-wick-0.4.0.tgz#10af55156f3c89f055c48122d23880c58f02f207"
+  integrity sha512-c1u4Hrj9cn+Fagt3Niee1h/QLiqEtgGvxusL6az6NFeexqY8FPgfuVoLcLOVjnqiDiMAJdzLIJE0Uw8l9oD6QA==
   dependencies:
     node-pre-gyp "^0.12.0"
 

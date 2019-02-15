@@ -94,7 +94,7 @@ async function PrepareStoreAssets(storeData) {
             extractor = new PakExtractor(v.filepath, pakKey);
         } catch (e) {
             console.error(e);
-            continue;
+            return;
         }
 
         let paths = extractor.get_file_list().map((v, idx) => ({
