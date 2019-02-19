@@ -3,6 +3,8 @@ import AssetList from '../assets.json';
 import StoreData from '../store.json';
 
 function getAssetFromId(id) {
+    if (!id) return null;
+    id = id.toLowerCase();
     return AssetList.filter(v => v.id == id).pop();
 }
 
@@ -27,8 +29,8 @@ function getStore(data, type) {
     .map(v => ({
         price: getItemPrice(v),
         categories: v.categories,
-        itemGrants: v.itemGrants.map(e => e.templateId.split(':').pop()).map(e => getAssetFromId(e.toLowerCase())),
-        displayAsset: v.displayAssetPath ? v.displayAssetPath.split('/').pop().split('.').pop() : null,
+        itemGrants: v.itemGrants.map(e => e.templateId.split(':').pop()).map(e => getAssetFromId(e)),
+        displayAsset: getAssetFromId(v.displayAssetPath ? v.displayAssetPath.split('/').pop().split('.').pop() : null),
     }));
 }
 

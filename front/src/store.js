@@ -6,7 +6,9 @@ class FeaturedItem extends React.Component {
     render() {
         let mainItem = this.props.item.itemGrants[0];
         if (!mainItem) return null;
+        let displayImage = this.props.item.displayAsset ? this.props.item.displayAsset.image : mainItem.image;
         return <div className={"featured-item " + mainItem.rarity}>
+            <img className="featured-image" src={"../../textures/" + displayImage} />
             <div className="title">{mainItem.name}</div>
             <div className="price">{this.props.item.price}</div>
         </div>;
