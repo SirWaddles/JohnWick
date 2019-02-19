@@ -1,0 +1,70 @@
+@import url('https://fonts.googleapis.com/css?family=Luckiest+Guy');
+
+html, body {
+	padding: 0;
+	margin: 0;
+	background-color: #202020;
+}
+
+.featured-panel {
+	width: 256px;
+	height: 512px;
+	overflow: hidden;
+	border-style: solid;
+	border-width: 2px;
+	border-color: #404040;
+	margin: 15px;
+	float: left;
+}
+
+.featured-item {
+	width: 256px;
+	height: 512px;
+	position: relative;
+}
+
+.featured-item .title {
+	font-family: 'Luckiest Guy', sans-serif;
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	height: 64px;
+	text-align: center;
+	color: #ffffff;
+	font-size: 24pt;
+	padding: 6px;
+	background-color: rgba(0, 0, 0, 0.2);
+}
+
+.featured-item .price {
+	font-family: 'Luckiest Guy', sans-serif;
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	height: 32px;
+	text-align: center;
+	color: #ffffff;
+	font-size: 12pt;
+}
+
+.Common {
+	background: radial-gradient(circle at center, #bebebe 5%, #646464 200%);
+}
+
+.Uncommon {
+	background: radial-gradient(circle at center, #60aa3a 5%, #175117 200%);
+}
+
+.Rare {
+	background: radial-gradient(circle at center, #49acf2 5%, #143977 200%);
+}
+
+.Epic {
+	background: radial-gradient(circle at center, #b15be2 5%, #4b2483 200%);
+}
+
+.Legendary {
+	background: radial-gradient(circle at center, #d37841 5%, #78371d 200%);
+}

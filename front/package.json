@@ -1,0 +1,26 @@
+{
+  "name": "wick-front",
+  "version": "0.1.0",
+  "description": "frontend for JohnWick bot",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "webpack"
+  },
+  "author": "Waddles",
+  "license": "MIT",
+  "dependencies": {
+    "@babel/core": "^7.3.3",
+    "@babel/preset-env": "^7.3.1",
+    "@babel/preset-react": "^7.0.0",
+    "babel-loader": "^8.0.5",
+    "css-loader": "^2.1.0",
+    "html-webpack-plugin": "^3.2.0",
+    "react": "^16.8.2",
+    "react-dom": "^16.8.2",
+    "samsio": "^1.1.0",
+    "style-loader": "^0.23.1",
+    "webpack": "^4.29.5",
+    "webpack-cli": "^3.2.3"
+  }
+}
