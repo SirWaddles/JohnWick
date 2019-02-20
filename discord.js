@@ -1,9 +1,14 @@
 const fs = require('fs');
 const Discord = require('discord.js');
-const client = new Discord.Client();
 const IPCClient = require('./client');
 const { DiscordToken } = require('./tokens');
 const { TSMessageHandle, SendServerImage } = require('./teamspeak');
+
+const client = new Discord.Client({
+    messageCacheLifetime: 60,
+    messageSweepInterval: 60,
+    disabledEvents: ["TYPING_START"],
+});
 
 var subbedChannels = [];
 var logStream = fs.createWriteStream('errors.txt', {flags: 'a'});

@@ -1,13 +1,17 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import Stores from './store';
+import Intro from './intro';
 import './style.css';
 
 import './assets.js';
 
 class AppComponent extends React.Component {
     render() {
-        return <Stores />;
+        return <div>
+            <Intro />
+            <Stores />
+        </div>;
     }
 }
 

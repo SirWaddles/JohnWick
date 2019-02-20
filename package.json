@@ -8,7 +8,7 @@
   "dependencies": {
     "abab": "^2.0.0",
     "canvas": "^2.0.0-alpha.17",
-    "discord.js": "^11.3.2",
+    "discord.js": "^11.4.2",
     "moment": "^2.23.0",
     "node-fetch": "^2.3.0",
     "node-ipc": "^9.1.1",

@@ -4,26 +4,57 @@ html, body {
 	padding: 0;
 	margin: 0;
 	background-color: #202020;
+	height: 100%;
+}
+
+body > div {
+	height: 100%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.store {
+	display: flex;
+}
+
+.featured-store {
+	flex: 1;
+	flex-shrink: 0;
+	white-space: nowrap;
+}
+
+.daily-store {
+	flex-grow: 1;
+	flex-shrink: 1;
+	flex-basis: 0;
+	overflow: auto;
 }
 
 .featured-panel {
-	width: 256px;
-	height: 512px;
+	width: 384px;
+	height: 548px;
 	overflow: hidden;
 	border-style: solid;
 	border-width: 2px;
 	border-color: #404040;
-	margin: 15px;
-	float: left;
+	margin: 16px;
+	display: inline-block;
 }
 
 .featured-item {
-	width: 256px;
-	height: 512px;
+	width: 384px;
+	height: 548px;
 	position: relative;
+	overflow: hidden;
 }
 
-.featured-item .title {
+.featured-image {
+	width: 548px;
+	margin-left: -82px;
+}
+
+.featured-item .title, .daily-item .title {
 	font-family: 'Luckiest Guy', sans-serif;
 	position: absolute;
 	bottom: 0;
@@ -32,12 +63,20 @@ html, body {
 	height: 64px;
 	text-align: center;
 	color: #ffffff;
-	font-size: 24pt;
 	padding: 6px;
 	background-color: rgba(0, 0, 0, 0.2);
+	white-space: nowrap;
 }
 
-.featured-item .price {
+.featured-item .title {
+	font-size: 24pt;
+}
+
+.daily-item .title {
+	font-size: 18pt;
+}
+
+.featured-item .price, .daily-item .price {
 	font-family: 'Luckiest Guy', sans-serif;
 	position: absolute;
 	bottom: 0;
@@ -47,6 +86,22 @@ html, body {
 	text-align: center;
 	color: #ffffff;
 	font-size: 12pt;
+}
+
+.daily-item {
+	width: 256px;
+	height: 256px;
+	overflow: hidden;
+	border-style: solid;
+	border-width: 2px;
+	border-color: #404040;
+	margin: 16px;
+	float: left;
+	position: relative;
+}
+
+.daily-image {
+	width: 256px;
 }
 
 .Common {
@@ -67,4 +122,34 @@ html, body {
 
 .Legendary {
 	background: radial-gradient(circle at center, #d37841 5%, #78371d 200%);
+}
+
+.link-list {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    text-align: center;
+}
+
+.link-list li {
+    display: inline-block;
+    width: 400px;
+}
+
+@media (max-width: 800px) {
+    .link-list li {
+        width: 45%;
+    }
+}
+
+a {
+    color: #eef;
+}
+
+a:visited {
+    color: #eff;
+}
+
+h1 {
+    text-align: center;
 }

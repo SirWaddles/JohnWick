@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "webpack"
+    "build": "webpack",
+    "prod": "webpack --mode=\"production\""
   },
   "author": "Waddles",
   "license": "MIT",
@@ -16,6 +17,7 @@
     "babel-loader": "^8.0.5",
     "css-loader": "^2.1.0",
     "html-webpack-plugin": "^3.2.0",
+    "nuka-carousel": "^4.4.8",
     "react": "^16.8.2",
     "react-dom": "^16.8.2",
     "samsio": "^1.1.0",

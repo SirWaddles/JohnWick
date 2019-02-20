@@ -1,11 +1,9 @@
 import { Store } from 'samsio';
-import AssetList from '../assets.json';
-import StoreData from '../store.json';
 
-function getAssetFromId(id) {
+function getAssetFromId(assets, id) {
     if (!id) return null;
     id = id.toLowerCase();
-    return AssetList.filter(v => v.id == id).pop();
+    return assets.filter(v => v.id == id).pop();
 }
 
 function getItemPrice(item) {
@@ -19,7 +17,7 @@ function getItemPrice(item) {
     return price;
 }
 
-function getStore(data, type) {
+function getStore(data, assets, type) {
     return data.storefronts.filter(v => v.name == type).pop().catalogEntries
     .sort((a, b) => {
         if (a.sortPriority > b.sortPriority) return -1;
@@ -29,14 +27,24 @@ function getStore(data, type) {
     .map(v => ({
         price: getItemPrice(v),
         categories: v.categories,
-        itemGrants: v.itemGrants.map(e => e.templateId.split(':').pop()).map(e => getAssetFromId(e)),
-        displayAsset: getAssetFromId(v.displayAssetPath ? v.displayAssetPath.split('/').pop().split('.').pop() : null),
+        itemGrants: v.itemGrants.map(e => e.templateId.split(':')).map(e => ({
+            item: getAssetFromId(assets, e[1]),
+            type: e[0],
+        })),
+        displayAsset: getAssetFromId(assets, v.displayAssetPath ? v.displayAssetPath.split('/').pop().split('.').pop() : null),
     }));
 }
 
+function GetStoreData(dataLink) {
+    return fetch("/" + dataLink, {
+        method: 'GET',
+    }).then(r => r.json());
+}
+
 async function GetAssetList() {
-    let featuredStore = getStore(StoreData, 'BRWeeklyStorefront');
-    let dailyStore = getStore(StoreData, 'BRDailyStorefront');
+    let datas = await Promise.all([GetStoreData('assets.json'), GetStoreData('store.json')]);
+    let featuredStore = getStore(datas[1], datas[0], 'BRWeeklyStorefront');
+    let dailyStore = getStore(datas[1], datas[0], 'BRDailyStorefront');
     return {
         featured: featuredStore,
         daily: dailyStore,
