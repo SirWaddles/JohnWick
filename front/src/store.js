@@ -6,9 +6,10 @@ class StoreItem extends React.Component {
     render() {
         let mainItem = this.props.item.itemGrants[0];
         if (!mainItem) return null;
-        let displayImage = (this.props.item.displayAsset && mainItem.type == 'AthenaCharacter') ? this.props.item.displayAsset.image : mainItem.item.image;
+        let showDisplayAsset = (this.props.item.displayAsset && mainItem.type == 'AthenaCharacter');
+        let displayImage = showDisplayAsset ? this.props.item.displayAsset.image : mainItem.item.image;
         return <div className={this.props.shopType + "-item " + mainItem.item.rarity}>
-            <div className={this.props.shopType + "-image"} style={{backgroundImage: "url('/textures/" + displayImage + "')"}} />
+            <div className={this.props.shopType + "-image" + (mainItem.type == 'AthenaCharacter' ? " display-asset" : " icon-asset")} style={{backgroundImage: "url('/textures/" + displayImage + "')"}} />
             <div className="title">{mainItem.item.name}</div>
             <div className="price">{this.props.item.price}</div>
         </div>;

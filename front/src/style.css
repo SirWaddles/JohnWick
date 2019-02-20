@@ -63,8 +63,16 @@ body > div {
 	right: 0;
 	top: 0;
 	bottom: 0;
-	background-size: cover;
 	background-position: center;
+	background-repeat: no-repeat;
+}
+
+.display-asset {
+	background-size: cover;
+}
+
+.icon-asset {
+	background-size: contain;
 }
 
 .featured-item .title, .daily-item .title {
@@ -122,8 +130,8 @@ body > div {
 	right: 0;
 	top: 0;
 	bottom: 0;
-	background-size: cover;
 	background-position: center;
+	background-repeat: no-repeat;
 }
 
 .Common {
