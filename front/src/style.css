@@ -26,6 +26,8 @@ body > div {
 	grid-template-columns: repeat(5, 1fr);
 	column-gap: 16px;
 	row-gap: 16px;
+	padding-top: 16px;
+	padding-bottom: 16px;
 }
 
 .featured-panel {
@@ -35,15 +37,15 @@ body > div {
 	position: relative;
 }
 
-@media (min-aspect-ratio: 1/1) {
+@media (max-aspect-ratio: 1/1) {
 	.store {
-		grid-template-rows: repeat(5, 1fr);
+		grid-template-rows: repeat(4, 1fr);
 		grid-template-columns: 1fr 1fr;
 		grid-auto-flow: row;
 	}
 
 	.featured-panel {
-		grid-row: span 2;
+		grid-row: 1;
 	}
 }
 
@@ -77,6 +79,7 @@ body > div {
 	padding: 6px;
 	background-color: rgba(0, 0, 0, 0.2);
 	white-space: nowrap;
+	overflow: hidden;
 }
 
 .featured-item .title {
@@ -85,6 +88,12 @@ body > div {
 
 .daily-item .title {
 	font-size: 18pt;
+}
+
+@media (max-width: 500px) {
+	.featured-item .title, .daily-item .title {
+		font-size: 14pt;
+	}
 }
 
 .featured-item .price, .daily-item .price {
@@ -103,6 +112,8 @@ body > div {
 	display: block;
 	overflow: hidden;
 	position: relative;
+	min-height: 256px;
+	min-width: 128px;
 }
 
 .daily-image {

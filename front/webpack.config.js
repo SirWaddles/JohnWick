@@ -10,6 +10,7 @@ module.exports = {
     },
     plugins: [new HtmlWebpackPlugin({
         title: "John Wick - Shop",
+        meta: {viewport: 'width=device-width, initial-scale=1'}
     })],
     module: {
         rules: [
