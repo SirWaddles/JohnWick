@@ -41,8 +41,12 @@ function GetStoreData(dataLink) {
     }).then(r => r.json());
 }
 
+/*import AssetData from '../assets.json';
+import StoreData from '../store.json';*/
+
 async function GetAssetList() {
     let datas = await Promise.all([GetStoreData('assets.json'), GetStoreData('store.json')]);
+    //let datas = [AssetData, StoreData];
     let featuredStore = getStore(datas[1], datas[0], 'BRWeeklyStorefront');
     let dailyStore = getStore(datas[1], datas[0], 'BRDailyStorefront');
     return {

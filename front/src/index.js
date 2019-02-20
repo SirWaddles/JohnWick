@@ -8,10 +8,7 @@ import './assets.js';
 
 class AppComponent extends React.Component {
     render() {
-        return <div>
-            <Intro />
-            <Stores />
-        </div>;
+        return [<Intro />, <Stores />];
     }
 }
 
