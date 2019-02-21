@@ -56,6 +56,7 @@ async function GetAssetList() {
     return {
         featured: featuredStore,
         daily: dailyStore,
+        expires: datas[1].expiration,
     };
 }
 
@@ -69,6 +70,9 @@ app.get("/api", (req, res) => {
 
 app.get("/api/assets", (req, res) => {
     GetAssetList().then(data => {
+        let expire = new Date(data.expires);
+        res.append("Cache-Control", "public, max-age=" + Math.floor((expire.getTime() - Date.now()) / 1000));
+        res.append("Expires", expire.toUTCString());
         res.json(data);
     });
 });
