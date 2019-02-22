@@ -11,7 +11,7 @@ class StoreItem extends React.Component {
         return <div className={this.props.shopType + "-item " + mainItem.item.rarity}>
             <div className={this.props.shopType + "-image" + (mainItem.type == 'AthenaCharacter' ? " display-asset" : " icon-asset")} style={{backgroundImage: "url('/textures/" + displayImage + "')"}} />
             <div className="title">{mainItem.item.name}</div>
-            <div className="price">{this.props.item.price}</div>
+            <div className="price"><span className="price-text">{this.props.item.price}</span></div>
         </div>;
     }
 }
