@@ -48,6 +48,12 @@ const AssetProcessors = {
         rarity: buildRarity(asset.Rarity),
         definition: findImport(asset.HeroDefinition),
     }),
+    "AthenaPetCarrierItemDefinition": asset => ({
+        name: asset.DisplayName ? asset.DisplayName.toString() : false,
+        description: asset.Description ? asset.Description.toString() : false,
+        image: buildImagePath(asset.LargePreviewImage),
+        rarity: buildRarity(asset.Rarity),
+    }),
     "AthenaBackpackItemDefinition": asset => ({
         name: asset.DisplayName ? asset.DisplayName.toString() : false,
         description: asset.Description ? asset.Description.toString() : false,
@@ -123,7 +129,7 @@ function ProcessItems() {
 
     let items = Object.assign({}, AssetList.AthenaPickaxeItemDefinition, AssetList.AthenaGliderItemDefinition,
         AssetList.AthenaBackpackItemDefinition, AssetList.AthenaCharacterItemDefinition, AssetList.AthenaItemWrapDefinition,
-        AssetList.AthenaDanceItemDefinition, AssetList.FortTokenType, AssetList.FortMtxOfferData);
+        AssetList.AthenaDanceItemDefinition, AssetList.AthenaPetCarrierItemDefinition, AssetList.FortTokenType, AssetList.FortMtxOfferData);
 
     Object.keys(items).forEach(itemId => {
         let item = items[itemId];
@@ -143,6 +149,7 @@ const AssetPaths = [
     'Athena/Items/Cosmetics/Gliders',
     'Athena/Items/Cosmetics/Pickaxes',
     'Athena/Items/Cosmetics/ItemWraps',
+    'Athena/Items/Cosmetics/PetCarriers',
     'Athena/Items/Weapons',
     'Athena/Heroes',
     'Catalog/DisplayAssets',
@@ -151,10 +158,12 @@ const AssetPaths = [
     'UI/Foundation/Textures/BattleRoyale/FeaturedItems/Outfit/RenderSwitch_Materials',
     'UI/Foundation/Textures/BattleRoyale/FeaturedItems/Pickaxe',
     'UI/Foundation/Textures/BattleRoyale/FeaturedItems/Sales',
+    'UI/Foundation/Textures/BattleRoyale/FeaturedItems/Pets',
     'UI/Foundation/Textures/Icons/Backpacks',
     'UI/Foundation/Textures/Icons/Emotes',
     'UI/Foundation/Textures/Icons/Heroes/Athena/Soldier',
     'UI/Foundation/Textures/Icons/Skydiving',
+    'UI/Foundation/Textures/Icons/Pets',
     'UI/Foundation/Textures/Icons/Weapons/Items',
     'UI/Foundation/Textures/Icons/Wraps',
 ];
