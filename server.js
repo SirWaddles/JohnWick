@@ -32,6 +32,11 @@ async function PostShopMessage() {
 }
 
 function PostNextMessage() {
+    let now = new Date();
+    if (now.getUTCHours() !== 0) {
+        QueueNextMessage();
+        return;
+    }
     PostShopMessage().then(() => {
         QueueNextMessage();
     }).catch(e => {

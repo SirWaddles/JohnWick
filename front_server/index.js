@@ -53,10 +53,12 @@ async function GetAssetList() {
     let datas = await Promise.all([GetStoreData('assets.json'), GetStoreData('store.json')]);
     let featuredStore = getStore(datas[1], datas[0], 'BRWeeklyStorefront');
     let dailyStore = getStore(datas[1], datas[0], 'BRDailyStorefront');
+    let now = new Date();
     return {
         featured: featuredStore,
         daily: dailyStore,
         expires: datas[1].expiration,
+        generated: now.toUTCString(),
     };
 }
 
