@@ -2,7 +2,6 @@ const fs = require('fs');
 const Discord = require('discord.js');
 const IPCClient = require('./client');
 const { DiscordToken } = require('./tokens');
-const { TSMessageHandle, SendServerImage } = require('./teamspeak');
 
 const client = new Discord.Client({
     messageCacheLifetime: 60,
@@ -10,16 +9,23 @@ const client = new Discord.Client({
     disabledEvents: ["TYPING_START"],
 });
 
+client.on('error', error => {
+    console.error(error);
+});
+
 var subbedChannels = [];
-var logStream = fs.createWriteStream('errors.txt', {flags: 'a'});
+var logStream = null;
 
 function LogToFile(text) {
     logStream.write(text + "\n");
 }
 
 if (fs.existsSync('channels.json')) {
+    LoadChannelFile();
+}
+
+function LoadChannelFile() {
     subbedChannels = JSON.parse(fs.readFileSync('channels.json'));
-    console.log(subbedChannels.length);
 }
 
 function SaveChannelFile() {
@@ -38,6 +44,7 @@ function BroadcastReminderMessage(msg) {
 
 client.on('ready', () => {
     client.user.setActivity('Type !help', {type: 'PLAYING'});
+    logStream = fs.createWriteStream('errors' + client.shard.id + '.txt', {flags: 'a'});
 });
 
 const HELP_MESSAGE = `\`\`\`
@@ -57,16 +64,9 @@ client.on('message', msg => {
         msg.channel.send(HELP_MESSAGE);
         return;
     }
-    if (parts[0] == '!ts') {
-        return TSMessageHandle(msg, parts).then(data => {
-            if (data && data.hasOwnProperty('aid')) {
-                subbedChannels.push(data);
-                SaveChannelFile();
-            }
-        });
-    }
     if (parts[0] == '!subscribe') {
         msg.channel.send("Sure thing! I'll tell you when the shop updates.").then(message => {
+            LoadChannelFile();
             subbedChannels.push({
                 channel: msg.channel.id.toString(),
                 type: (parts.length > 1 && parts[1] == 'text') ? 'text' : 'image',
@@ -77,6 +77,7 @@ client.on('message', msg => {
         });
     }
     if (parts[0] == '!unsubscribe') {
+        LoadChannelFile();
         subbedChannels = subbedChannels.filter(v => v.channel != msg.channel.id);
         msg.channel.send("Not a problem, I'll stop sending stuff here.");
         SaveChannelFile();
@@ -104,11 +105,6 @@ client.on('message', msg => {
         });
     }
     if (parts[0] == '!broadcast' && msg.author.id == '229419335930609664') {
-        if (parts[1] == 'ts') {
-            let tsList = subbedChannels.filter(v => v.type == 'teamspeak');
-            SendServerImage(tsList, parts.slice(2).join(" "));
-            return;
-        }
         if (parts[1] == 'shop') {
             PostShopMessage(GetFileName());
             return;
@@ -135,6 +131,7 @@ function GetFileName() {
 }
 
 function PostShopMessage(fileName) {
+    LoadChannelFile();
     var channelList = subbedChannels.filter(v => v.type == 'image').map(v => v.channel);
     client.channels.forEach(channel => {
         if (channelList.includes(channel.id)) {

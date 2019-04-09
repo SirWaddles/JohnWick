@@ -5,8 +5,10 @@ const { GetStoreImages } = require('./images');
 
 ipc.config.id = 'wick';
 ipc.config.retry = 5000;
+ipc.config.networkHost = 'localhost';
+ipc.config.networkPort = 27020;
 
-ipc.serve(() => {
+ipc.serveNet(() => {
     ipc.server.on('app.get_image', (data, socket) => {
         GetStoreImages(false).then(image => {
             ipc.server.emit(socket, 'app.receive_image', {

@@ -2,12 +2,14 @@ const ipc = require('node-ipc');
 
 ipc.config.id = 'wick';
 ipc.config.retry = 5000;
+ipc.config.networkHost = 'localhost';
+ipc.config.networkPort = 27020;
 
 let ImageHooks = [];
 let ImageReceives = [];
 let ImageRequestID = 0;
 
-ipc.connectTo('wick', () => {
+ipc.connectToNet('wick', () => {
     ipc.of.wick.on('app.image', (data) => {
         ImageHooks.forEach(v => v(data.path));
     });
