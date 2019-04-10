@@ -2,6 +2,7 @@ const fs = require('fs');
 const Discord = require('discord.js');
 const IPCClient = require('./client');
 const { DiscordToken } = require('./tokens');
+const discordDb = require('./discord_db');
 
 const client = new Discord.Client({
     messageCacheLifetime: 60,
@@ -12,27 +13,15 @@ const client = new Discord.Client({
 client.on('error', error => {
     console.error(error);
 });
+discordDb.connect();
 
-var subbedChannels = [];
 var logStream = null;
 
 function LogToFile(text) {
     logStream.write(text + "\n");
 }
 
-if (fs.existsSync('channels.json')) {
-    LoadChannelFile();
-}
-
-function LoadChannelFile() {
-    subbedChannels = JSON.parse(fs.readFileSync('channels.json'));
-}
-
-function SaveChannelFile() {
-    fs.writeFileSync('channels.json', JSON.stringify(subbedChannels));
-}
-
-function BroadcastReminderMessage(msg) {
+/*function BroadcastReminderMessage(msg) {
     let channelIds = subbedChannels.map(v => v.channel);
     let servers = client.guilds.filter(guild => guild.channels.filter(ch => channelIds.includes(ch.id)).size <= 0);
 
@@ -40,7 +29,7 @@ function BroadcastReminderMessage(msg) {
     servers.forEach(server => {
         server.owner.send(replyString.map(v => v == '[[servername]]' ? server.name : v).join(' '));
     });
-}
+}*/
 
 client.on('ready', () => {
     client.user.setActivity('Type !help', {type: 'PLAYING'});
@@ -66,27 +55,20 @@ client.on('message', msg => {
     }
     if (parts[0] == '!subscribe') {
         msg.channel.send("Sure thing! I'll tell you when the shop updates.").then(message => {
-            LoadChannelFile();
-            subbedChannels.push({
-                channel: msg.channel.id.toString(),
-                type: (parts.length > 1 && parts[1] == 'text') ? 'text' : 'image',
-            });
-            SaveChannelFile();
+            discordDb.addNewChannel(msg.channel.id, (parts.length > 1 && parts[1] == 'text') ? 'text' : 'image');
         }).catch(e => {
             LogToFile('attempted to subscribe to ' + msg.channel.id);
         });
     }
     if (parts[0] == '!unsubscribe') {
-        LoadChannelFile();
-        subbedChannels = subbedChannels.filter(v => v.channel != msg.channel.id);
+        discordDb.removeChannel(msg.channel.id);
         msg.channel.send("Not a problem, I'll stop sending stuff here.");
-        SaveChannelFile();
     }
     if (parts[0] == '!servers' && msg.author.id == '229419335930609664') {
         msg.reply("Currently connected to **" + client.guilds.size + "** servers");
         return;
     }
-    if (parts[0] == '!serverlist' && msg.author.id == '229419335930609664') {
+    /*if (parts[0] == '!serverlist' && msg.author.id == '229419335930609664') {
         let listFile = client.guilds.sort((a, b) => {
             return (a.name.toLowerCase() > b.name.toLowerCase()) ? 1 : -1;
         }).map(v => {
@@ -97,7 +79,7 @@ client.on('message', msg => {
         let attach = new Discord.Attachment(fileBuffer, 'list.txt');
         msg.channel.send(attach);
         return;
-    }
+    }*/
     if (parts[0] == '!shop' && msg.author.id == '229419335930609664') {
         IPCClient.GetImage().then(data => {
             var attach = new Discord.Attachment(data, 'shop.png');
@@ -109,18 +91,12 @@ client.on('message', msg => {
             PostShopMessage(GetFileName());
             return;
         }
-        if (parts[1] == 'empty_servers') {
+        /*if (parts[1] == 'empty_servers') {
             BroadcastReminderMessage(msg);
             return;
-        }
-        var channelList = subbedChannels.map(v => v.channel);
-        parts.shift();
-        var broadcastMessage = parts.join(" ");
-        client.channels.forEach(channel => {
-            if (channelList.includes(channel.id)) {
-                channel.send(broadcastMessage);
-            }
-        });
+        }*/
+        // Need to redo broadcasting for shards
+        return;
     }
 });
 
@@ -130,9 +106,9 @@ function GetFileName() {
     return fileName;
 }
 
-function PostShopMessage(fileName) {
-    LoadChannelFile();
-    var channelList = subbedChannels.filter(v => v.type == 'image').map(v => v.channel);
+async function PostShopMessage(fileName) {
+    let channelList = await discordDb.getChannels("image");
+    channelList = channelList.map(v => v.discord);
     client.channels.forEach(channel => {
         if (channelList.includes(channel.id)) {
             channel.send("https://johnwickbot.shop/" + fileName).catch(error => {
