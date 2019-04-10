@@ -4,42 +4,48 @@ ipc.config.id = 'wick';
 ipc.config.retry = 5000;
 ipc.config.networkHost = 'localhost';
 ipc.config.networkPort = 27020;
+ipc.config.silent = true;
 
-let ImageHooks = [];
-let ImageReceives = [];
-let ImageRequestID = 0;
+let BroadcastHooks = [];
+let MessageReceives = [];
+let MessageRequestID = 0;
 
 ipc.connectToNet('wick', () => {
-    ipc.of.wick.on('app.image', (data) => {
-        ImageHooks.forEach(v => v(data.path));
+    ipc.of.wick.on('app.broadcast', data => {
+        BroadcastHooks.filter(v => v.type == data.type).forEach(v => v.hook(data.data));
     });
-    ipc.of.wick.on('app.receive_image', data => {
-        let request = ImageReceives.filter(v => v.request_id == data.request_id).pop();
+    ipc.of.wick.on('app.receive_message', data => {
+        let request = MessageReceives.filter(v => v.request_id == data.request_id).pop();
         if (!request) return;
-        let image_buffer = Buffer.from(data.image, 'base64');
-        request.resolve(image_buffer);
-        ImageReceives = ImageReceives.filter(v => v.request_id != data.request_id);
+        request.resolve(data.data);
+        MessageReceives = MessageReceives.filter(v => v.request_id !== data.request_id);
     });
+    console.log('Client Connected');
 });
 
-function AddImageHook(hook) {
-    ImageHooks.push(hook);
+function AddBroadcastHook(type, hook) {
+    BroadcastHooks.push({
+        hook: hook,
+        type: type,
+    });
 }
 
-function GetImage() {
+function SendMessage(type, data) {
     return new Promise((resolve, reject) => {
-        ImageRequestID++;
-        let image_request = {
-            request_id: ImageRequestID,
+        MessageRequestID++;
+        let message_request = {
+            request_id: MessageRequestID,
             resolve: resolve,
             reject: reject,
         };
-        ipc.of.wick.emit('app.get_image', {
-            request_id: ImageRequestID,
+        ipc.of.wick.emit('app.send_message', {
+            request_id: MessageRequestID,
+            type: type,
+            data: data,
         });
-        ImageReceives.push(image_request);
+        MessageReceives.push(message_request);
     });
 }
 
-exports.AddImageHook = AddImageHook;
-exports.GetImage = GetImage;
+exports.AddBroadcastHook = AddBroadcastHook;
+exports.SendMessage = SendMessage;

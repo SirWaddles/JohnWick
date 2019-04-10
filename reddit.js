@@ -18,6 +18,4 @@ function submitRedditShop(link) {
     });
 }
 
-IPCClient.AddImageHook((path) => {
-    submitRedditShop("https://johnwickbot.shop/" + path);
-});
+IPCClient.AddBroadcastHook('image', path => submitRedditShop("https://johnwickbot.shop/" + path));

@@ -21,16 +21,6 @@ function LogToFile(text) {
     logStream.write(text + "\n");
 }
 
-/*function BroadcastReminderMessage(msg) {
-    let channelIds = subbedChannels.map(v => v.channel);
-    let servers = client.guilds.filter(guild => guild.channels.filter(ch => channelIds.includes(ch.id)).size <= 0);
-
-    let replyString = msg.content.split(' ').slice(2);
-    servers.forEach(server => {
-        server.owner.send(replyString.map(v => v == '[[servername]]' ? server.name : v).join(' '));
-    });
-}*/
-
 client.on('ready', () => {
     client.user.setActivity('Type !help', {type: 'PLAYING'});
     logStream = fs.createWriteStream('errors' + client.shard.id + '.txt', {flags: 'a'});
@@ -81,21 +71,20 @@ client.on('message', msg => {
         return;
     }*/
     if (parts[0] == '!shop' && msg.author.id == '229419335930609664') {
-        IPCClient.GetImage().then(data => {
-            var attach = new Discord.Attachment(data, 'shop.png');
+        IPCClient.SendMessage('request_image', null).then(data => {
+            let image_buffer = Buffer.from(data, 'base64');
+            var attach = new Discord.Attachment(image_buffer, 'shop.png');
             msg.channel.send(attach);
         });
     }
     if (parts[0] == '!broadcast' && msg.author.id == '229419335930609664') {
         if (parts[1] == 'shop') {
-            PostShopMessage(GetFileName());
+            IPCClient.SendMessage('request_broadcast', GetFileName());
             return;
         }
-        /*if (parts[1] == 'empty_servers') {
-            BroadcastReminderMessage(msg);
-            return;
-        }*/
-        // Need to redo broadcasting for shards
+        parts.shift();
+        let broadcastMessage = parts.join(" ");
+        IPCClient.SendMessage('request_broadcast', broadcastMessage);
         return;
     }
 });
@@ -106,12 +95,12 @@ function GetFileName() {
     return fileName;
 }
 
-async function PostShopMessage(fileName) {
+async function BroadcastDiscordMessage(message) {
     let channelList = await discordDb.getChannels("image");
     channelList = channelList.map(v => v.discord);
     client.channels.forEach(channel => {
         if (channelList.includes(channel.id)) {
-            channel.send("https://johnwickbot.shop/" + fileName).catch(error => {
+            channel.send(message).catch(error => {
                 LogToFile(error);
                 LogToFile(channel.id);
             });
@@ -119,6 +108,7 @@ async function PostShopMessage(fileName) {
     });
 }
 
-IPCClient.AddImageHook((fileName) => PostShopMessage(fileName));
+IPCClient.AddBroadcastHook('image', (fileName) => BroadcastDiscordMessage("https://johnwickbot.shop/" + fileName));
+IPCClient.AddBroadcastHook('message_broadcast', message => BroadcastDiscordMessage(message));
 
 client.login(DiscordToken);
