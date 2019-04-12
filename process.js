@@ -54,6 +54,12 @@ const AssetProcessors = {
         image: buildImagePath(asset.LargePreviewImage),
         rarity: buildRarity(asset.Rarity),
     }),
+    "AthenaMusicPackItemDefinition": asset => ({
+        name: asset.DisplayName ? asset.DisplayName.toString() : false,
+        description: asset.Description ? asset.Description.toString() : false,
+        image: buildImagePath(asset.LargePreviewImage),
+        rarity: buildRarity(asset.Rarity),
+    }),
     "AthenaBackpackItemDefinition": asset => ({
         name: asset.DisplayName ? asset.DisplayName.toString() : false,
         description: asset.Description ? asset.Description.toString() : false,
@@ -101,9 +107,16 @@ const AssetProcessors = {
         image: buildImagePath(asset.LargePreviewImage),
         rarity: buildRarity(asset.Rarity),
     }),
-    "MaterialInstanceConstant": asset => ({
-        images: asset.TextureParameterValues.map(v => findImport(v.ParameterValue) + '.png'),
-    }),
+    "MaterialInstanceConstant": asset => {
+        if (asset.hasOwnProperty('TextureParameterValues')) {
+            return {
+                images: asset.TextureParameterValues.map(v => findImport(v.ParameterValue) + '.png'),
+            };
+        }
+        return {
+
+        };
+    },
 };
 
 function AddAsset(asset, assetName) {
@@ -122,13 +135,15 @@ function ProcessItems() {
             let item = AssetList.FortMtxOfferData[itemId];
             if (!item.hasOwnProperty('import')) return;
             if (AssetList.MaterialInstanceConstant.hasOwnProperty(item.import)) {
-                item.image = AssetList.MaterialInstanceConstant[item.import].images.pop();
+                if (AssetList.MaterialInstanceConstant[item.import].hasOwnProperty('images')) {
+                    item.image = AssetList.MaterialInstanceConstant[item.import].images.pop();
+                }
             }
         });
     }
 
     let items = Object.assign({}, AssetList.AthenaPickaxeItemDefinition, AssetList.AthenaGliderItemDefinition,
-        AssetList.AthenaBackpackItemDefinition, AssetList.AthenaCharacterItemDefinition, AssetList.AthenaItemWrapDefinition,
+        AssetList.AthenaBackpackItemDefinition, AssetList.AthenaCharacterItemDefinition, AssetList.AthenaItemWrapDefinition, AssetList.AthenaMusicPackItemDefinition,
         AssetList.AthenaDanceItemDefinition, AssetList.AthenaPetCarrierItemDefinition, AssetList.FortTokenType, AssetList.FortMtxOfferData);
 
     Object.keys(items).forEach(itemId => {
@@ -147,6 +162,7 @@ const AssetPaths = [
     'Athena/Items/Cosmetics/Characters',
     'Athena/Items/Cosmetics/Dances',
     'Athena/Items/Cosmetics/Gliders',
+    'Athena/Items/Cosmetics/MusicPacks',
     'Athena/Items/Cosmetics/Pickaxes',
     'Athena/Items/Cosmetics/ItemWraps',
     'Athena/Items/Cosmetics/PetCarriers',
@@ -166,6 +182,7 @@ const AssetPaths = [
     'UI/Foundation/Textures/Icons/Pets',
     'UI/Foundation/Textures/Icons/Weapons/Items',
     'UI/Foundation/Textures/Icons/Wraps',
+    '2dAssets/Music/Season8/PreviewImages/',
 ];
 
 function GetItemPaths(paths) {
