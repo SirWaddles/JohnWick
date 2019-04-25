@@ -34,6 +34,7 @@ const AssetProcessors = {
         description: asset.Description ? asset.Description.toString() : false,
         image: buildImagePath(asset.LargePreviewImage),
         rarity: buildRarity(asset.Rarity),
+        series: asset.hasOwnProperty("Series") ? asset.Series : null,
         definition: findImport(asset.WeaponDefinition),
     }),
     "AthenaGliderItemDefinition": asset => ({
@@ -41,11 +42,13 @@ const AssetProcessors = {
         description: asset.Description ? asset.Description.toString() : false,
         image: buildImagePath(asset.LargePreviewImage),
         rarity: buildRarity(asset.Rarity),
+        series: asset.hasOwnProperty("Series") ? asset.Series : null,
     }),
     "AthenaCharacterItemDefinition": asset => ({
         name: asset.DisplayName ? asset.DisplayName.toString() : false,
         description: asset.Description ? asset.Description.toString() : false,
         rarity: buildRarity(asset.Rarity),
+        series: asset.hasOwnProperty("Series") ? asset.Series : null,
         definition: findImport(asset.HeroDefinition),
     }),
     "AthenaPetCarrierItemDefinition": asset => ({
@@ -60,29 +63,39 @@ const AssetProcessors = {
         image: buildImagePath(asset.LargePreviewImage),
         rarity: buildRarity(asset.Rarity),
     }),
+    "AthenaSkyDiveContrailItemDefinition": asset => ({
+        name: asset.DisplayName ? asset.DisplayName.toString() : false,
+        description: asset.Description ? asset.Description.toString() : false,
+        image: buildImagePath(asset.LargePreviewImage),
+        rarity: buildRarity(asset.Rarity),
+    }),
     "AthenaBackpackItemDefinition": asset => ({
         name: asset.DisplayName ? asset.DisplayName.toString() : false,
         description: asset.Description ? asset.Description.toString() : false,
         image: buildImagePath(asset.LargePreviewImage),
         rarity: buildRarity(asset.Rarity),
+        series: asset.hasOwnProperty("Series") ? asset.Series : null,
     }),
     "AthenaItemWrapDefinition": asset => ({
         name: asset.DisplayName ? asset.DisplayName.toString() : false,
         description: asset.Description ? asset.Description.toString() : false,
         image: buildImagePath(asset.LargePreviewImage),
         rarity: buildRarity(asset.Rarity),
+        series: asset.hasOwnProperty("Series") ? asset.Series : null,
     }),
     "FortWeaponMeleeItemDefinition": asset => ({
         name: asset.DisplayName ? asset.DisplayName.toString() : false,
         description: asset.Description ? asset.Description.toString() : false,
         image: buildImagePath(asset.LargePreviewImage),
         rarity: buildRarity(asset.Rarity),
+        series: asset.hasOwnProperty("Series") ? asset.Series : null,
     }),
     "AthenaDanceItemDefinition": asset => ({
         name: asset.DisplayName ? asset.DisplayName.toString() : false,
         description: asset.Description ? asset.Description.toString() : false,
         image: buildImagePath(asset.LargePreviewImage),
         rarity: buildRarity(asset.Rarity),
+        series: asset.hasOwnProperty("Series") ? asset.Series : null,
     }),
     "FortMtxOfferData": asset => {
         if (asset.hasOwnProperty('TileImage') && asset.TileImage.hasOwnProperty('ResourceObject')) {
@@ -143,7 +156,7 @@ function ProcessItems() {
     }
 
     let items = Object.assign({}, AssetList.AthenaPickaxeItemDefinition, AssetList.AthenaGliderItemDefinition,
-        AssetList.AthenaBackpackItemDefinition, AssetList.AthenaCharacterItemDefinition, AssetList.AthenaItemWrapDefinition, AssetList.AthenaMusicPackItemDefinition,
+        AssetList.AthenaBackpackItemDefinition, AssetList.AthenaCharacterItemDefinition, AssetList.AthenaItemWrapDefinition, AssetList.AthenaMusicPackItemDefinition, AssetList.AthenaSkyDiveContrailItemDefinition,
         AssetList.AthenaDanceItemDefinition, AssetList.AthenaPetCarrierItemDefinition, AssetList.FortTokenType, AssetList.FortMtxOfferData);
 
     Object.keys(items).forEach(itemId => {
@@ -182,7 +195,11 @@ const AssetPaths = [
     'UI/Foundation/Textures/Icons/Pets',
     'UI/Foundation/Textures/Icons/Weapons/Items',
     'UI/Foundation/Textures/Icons/Wraps',
-    '2dAssets/Music/Season8/PreviewImages/',
+    '2dAssets/Music/Season6/PreviewImages',
+    '2dAssets/Music/Season7/PreviewImages',
+    '2dAssets/Music/Season8/PreviewImages',
+    'Athena/Items/Cosmetics/Contrails/',
+    'UI/Foundation/Textures/Icons/Skydiving/FX-Trails/',
 ];
 
 function GetItemPaths(paths) {

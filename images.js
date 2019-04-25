@@ -15,6 +15,10 @@ const RarityColours = {
     'Legendary': ['#d37841','#78371d'],
 };
 
+const SeriesColours = {
+    'MarvelSeries': ['#c53334', '#761b1b'],
+};
+
 const RarityOrder = {
     'Legendary': 0,
     'Epic': 1,
@@ -95,9 +99,13 @@ async function CreateImageTile(stData) {
         }
 
         if (v.rarity) {
+            let rarityColour = RarityColours[v.rarity];
+            if (v.series) {
+                rarityColour = SeriesColours[v.series];
+            }
             var gradient = ctx.createRadialGradient(xOff + 256, yOff + 256, 128, xOff + 256, yOff + 256, 384);
-            gradient.addColorStop(0, RarityColours[v.rarity][0]);
-            gradient.addColorStop(1, RarityColours[v.rarity][1]);
+            gradient.addColorStop(0, rarityColour[0]);
+            gradient.addColorStop(1, rarityColour[1]);
             ctx.fillStyle = gradient;
             ctx.fillRect(xOff, yOff, 512, 576);
         }
@@ -140,7 +148,11 @@ async function CreateImageTile(stData) {
             if (!fs.existsSync(itemImagePath)) return true;
             let itemImage = await Canvas.loadImage(itemImagePath);
 
-            ctx.fillStyle = RarityColours[extraItem.rarity][0];
+            let rarityColour = RarityColours[extraItem.rarity];
+            if (v.series) {
+                rarityColour = SeriesColours[extraItem.series];
+            }
+            ctx.fillStyle = rarityColour[0];
             ctx.fillRect(xOff + (idx * 128), yOff + 320, 128, 128);
             ctx.drawImage(itemImage, xOff + (idx * 128), yOff + 320, 128, 128);
         }));

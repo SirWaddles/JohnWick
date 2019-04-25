@@ -152,6 +152,7 @@ function GetAssetItemData(assetList, assetKey) {
         displayName: assetData.name,
         rarity: assetData.rarity,
         description: assetData.description,
+        series: assetData.series,
     };
 }
 
