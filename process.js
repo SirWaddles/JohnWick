@@ -7,10 +7,10 @@ function buildImagePath(path) {
 }
 
 const RarityLevels = {
-    "EFortRarity::Handmade": "Common",
-    "EFortRarity::Sturdy": "Rare",
-    "EFortRarity::Quality": "Epic",
-    "EFortRarity::Fine": "Legendary",
+    "EFortRarity::Common": "Common",
+    "EFortRarity::Rare": "Rare",
+    "EFortRarity::Epic": "Epic",
+    "EFortRarity::Legendary": "Legendary",
 };
 
 function buildRarity(rarity) {
@@ -120,6 +120,12 @@ const AssetProcessors = {
         image: buildImagePath(asset.LargePreviewImage),
         rarity: buildRarity(asset.Rarity),
     }),
+    "FortBannerTokenType": asset => ({
+        name: asset.DisplayName ? asset.DisplayName.toString() : false,
+        description: asset.Description ? asset.Description.toString() : false,
+        image: buildImagePath(asset.LargePreviewImage),
+        rarity: buildRarity(asset.Rarity),
+    }),
     "MaterialInstanceConstant": asset => {
         if (asset.hasOwnProperty('TextureParameterValues')) {
             return {
@@ -157,7 +163,7 @@ function ProcessItems() {
 
     let items = Object.assign({}, AssetList.AthenaPickaxeItemDefinition, AssetList.AthenaGliderItemDefinition,
         AssetList.AthenaBackpackItemDefinition, AssetList.AthenaCharacterItemDefinition, AssetList.AthenaItemWrapDefinition, AssetList.AthenaMusicPackItemDefinition, AssetList.AthenaSkyDiveContrailItemDefinition,
-        AssetList.AthenaDanceItemDefinition, AssetList.AthenaPetCarrierItemDefinition, AssetList.FortTokenType, AssetList.FortMtxOfferData);
+        AssetList.AthenaDanceItemDefinition, AssetList.AthenaPetCarrierItemDefinition, AssetList.FortTokenType, AssetList.FortBannerTokenType, AssetList.FortMtxOfferData);
 
     Object.keys(items).forEach(itemId => {
         let item = items[itemId];
@@ -179,6 +185,7 @@ const AssetPaths = [
     'Athena/Items/Cosmetics/Pickaxes',
     'Athena/Items/Cosmetics/ItemWraps',
     'Athena/Items/Cosmetics/PetCarriers',
+    'Athena/Items/BannerToken',
     'Athena/Items/Weapons',
     'Athena/Heroes',
     'Catalog/DisplayAssets',
@@ -188,6 +195,7 @@ const AssetPaths = [
     'UI/Foundation/Textures/BattleRoyale/FeaturedItems/Pickaxe',
     'UI/Foundation/Textures/BattleRoyale/FeaturedItems/Sales',
     'UI/Foundation/Textures/BattleRoyale/FeaturedItems/Pets',
+    'UI/Foundation/Textures/BattleRoyale/FeaturedItems/Banner',
     'UI/Foundation/Textures/Icons/Backpacks',
     'UI/Foundation/Textures/Icons/Emotes',
     'UI/Foundation/Textures/Icons/Heroes/Athena/Soldier',
@@ -198,6 +206,9 @@ const AssetPaths = [
     '2dAssets/Music/Season6/PreviewImages',
     '2dAssets/Music/Season7/PreviewImages',
     '2dAssets/Music/Season8/PreviewImages',
+    '2dAssets/Music/Season9/PreviewImages',
+    '2dAssets/Music/Season10/PreviewImages',
+    '2dAssets/Banners/Season9',
     'Athena/Items/Cosmetics/Contrails/',
     'UI/Foundation/Textures/Icons/Skydiving/FX-Trails/',
 ];

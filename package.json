@@ -12,9 +12,9 @@
     "moment": "^2.23.0",
     "node-fetch": "^2.3.0",
     "node-ipc": "^9.1.1",
-    "node-wick": "^1.1.0",
+    "node-wick": "^1.1.3",
     "pg": "^7.9.0",
-    "snoowrap": "^1.15.2",
+    "snoowrap": "^1.17.0",
     "sqlite3": "^4.0.6"
   }
 }
