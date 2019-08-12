@@ -201,7 +201,7 @@ async function getStoreData() {
 }
 
 async function getKeychain() {
-    loginToken = await refreshToken();
+    loginToken = await refreshToken(loginToken);
     return fetch(FORTNITE_KEYCHAIN, {
         headers: {
             "X-EpicGames-Language": "en",
@@ -211,5 +211,10 @@ async function getKeychain() {
     }).then(r => r.json());
 }
 
+async function refreshLoginToken() {
+    loginToken = await refreshToken(loginToken);
+}
+
 exports.getStoreData = getStoreData;
 exports.getKeychain = getKeychain;
+exports.refreshLoginToken = refreshLoginToken;

@@ -1,6 +1,7 @@
 const fs = require('fs');
 const ipc = require('node-ipc');
 const Fortnite = require('./fortnite');
+const FortniteAPI = require('./api');
 const { GetStoreImages } = require('./images');
 
 ipc.config.id = 'wick';
@@ -49,10 +50,12 @@ function GetFileName() {
 }
 
 async function PostShopMessage() {
+    Fortnite.StampedLog("Posting shop image");
     let image = await GetStoreImages(true);
     let fileName = GetFileName();
     fs.writeFileSync('./store_images/' + fileName, image);
     BroadcastMessage('image', fileName);
+    Fortnite.StampedLog("Sent shop image to subs");
 }
 
 function PostNextMessage() {
@@ -77,10 +80,12 @@ function QueueNextMessage() {
         let targetTime = new Date(data.expiration);
         let timeUntil = targetTime.getTime() - Date.now();
         setTimeout(PostNextMessage, timeUntil + 2000);
+        setTimeout(() => FortniteAPI.refreshLoginToken(), timeUntil - 8000);
     });
 }
 
 AddMessageHook('request_image', data => {
+    Fortnite.StampedLog("Received request for image");
     return GetStoreImages(false).then(image => image.toString('base64'));
 });
 

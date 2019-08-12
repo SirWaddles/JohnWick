@@ -9,8 +9,16 @@ const { addShopHistory } = require('./db');
 var storeData = false;
 //storeData = JSON.parse(fs.readFileSync('store.json'));
 
+function StampedLog(message) {
+    let time = new Date();
+    let timeStr = time.getUTCHours() + ":" + time.getUTCMinutes() + ":" + time.getUTCSeconds() + "-" + time.getUTCMilliseconds();
+    console.log("[" + timeStr + "] " + message);
+}
+
 function RefreshStoreData() {
+    StampedLog("Getting store data");
     return getStoreData().then(store => {
+        StampedLog("Got store data");
         fs.writeFileSync('store.json', JSON.stringify(store));
         storeData = store;
         if (!storeData.hasOwnProperty('storefronts')) {
@@ -68,6 +76,7 @@ function guidStringParse(str) {
 }
 
 async function PrepareStoreAssets(storeData) {
+    StampedLog("Decrypting Assets");
     let storeInfo = await storeData;
     let keyDatas = storeInfo.storefronts
         .filter(v => v.hasOwnProperty('catalogEntries'))
@@ -77,13 +86,18 @@ async function PrepareStoreAssets(storeData) {
         .reduce((acc, v) => acc.concat(v.split(',').map(guidStringParse)), []);
 
     try {
+        StampedLog("Getting keychain");
         let chainData = await getKeychain();
+        StampedLog("Keychain retreived");
         keyDatas = keyDatas.concat(chainData.map(guidStringParse));
     } catch (e) {
         console.error(e);
     }
 
-    if (keyDatas.length <= 0) return storeInfo;
+    if (keyDatas.length <= 0) {
+        StampedLog("Nothing to decrypt");
+        return storeInfo;
+    }
     let guidList = keyDatas.map(v => v.guid);
     let pakMap = BuildPakMap().filter(v => guidList.includes(v.guid));
     let assetFiles = [];
@@ -138,6 +152,8 @@ async function PrepareStoreAssets(storeData) {
     let currentAssetList = JSON.parse(fs.readFileSync('./assets.json')).filter(v => !newIds.includes(v.id));
     currentAssetList = currentAssetList.concat(assets);
     fs.writeFileSync('./assets.json', JSON.stringify(currentAssetList));
+
+    StampedLog("Decryption complete");
 
     return storeInfo;
 }
@@ -203,3 +219,4 @@ exports.GetStoreData = GetStoreData;
 exports.GetStoreItems = GetStoreItems;
 exports.GetStoreInfo = GetStoreInfo;
 exports.PrepareStoreAssets = PrepareStoreAssets;
+exports.StampedLog = StampedLog;

@@ -60,6 +60,7 @@ function ColourToHex(colour) {
 }
 
 async function CreateImageTile(stData) {
+    Fortnite.StampedLog("Creating image");
     var rows = Math.min(stData.length, Math.round(Math.sqrt(stData.length)));
     var cols = Math.ceil(stData.length / rows);
     var canvas = Canvas.createCanvas(512 * cols, 576 * rows);
@@ -157,6 +158,8 @@ async function CreateImageTile(stData) {
             ctx.drawImage(itemImage, xOff + (idx * 128), yOff + 320, 128, 128);
         }));
     }));
+
+    Fortnite.StampedLog("Image built");
     return canvas.toBuffer();
 }
 
