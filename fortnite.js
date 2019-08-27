@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const { atob } = require('abab');
-const { PakExtractor, read_asset, read_texture_to_file, read_pak_key } = require('node-wick');
+const { PakExtractor, Package, read_texture_to_file, read_pak_key } = require('node-wick');
 const { GetItemPaths, AddAsset, ProcessItems } = require('./process');
 const { getStoreData, getKeychain } = require('./api');
 const { addShopHistory } = require('./db');
@@ -132,12 +132,12 @@ async function PrepareStoreAssets(storeData) {
         let fileAsset = filename.slice(0, -7);
         let asset = false;
         try {
-            asset = read_asset('./live/assets/' + fileAsset);
+            asset = new Package('./live/assets/' + fileAsset);
         } catch (e) {
             console.error(e);
             continue;
         }
-        let object = asset[0];
+        let object = asset.get_data()[0];
         if (object.export_type == "Texture2D") {
             let tPath = './textures/' + fileAsset + '.png';
             if (!fs.existsSync(tPath)) {
