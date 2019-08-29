@@ -43,9 +43,13 @@ function AddMessageHook(type, callback) {
     });
 }
 
-function GetFileName() {
+function GetFileName(extra) {
     var now = new Date();
-    var fileName = now.getFullYear() + '_' + now.getMonth() + '_' + now.getDate() + '.png';
+    let dateStr = now.getFullYear() + '_' + now.getMonth() + '_' + now.getDate();
+    if (typeof extra !== 'undefined' && extra === true) {
+        dateStr += "_" + now.getHours() + "_" + now.getMinutes();
+    }
+    var fileName = dateStr + '.png';
     return fileName;
 }
 
@@ -85,8 +89,15 @@ function QueueNextMessage() {
 }
 
 AddMessageHook('request_image', data => {
+    return "https://johnwickbot.shop/" + GetFileName();
+});
+
+AddMessageHook('request_refresh', async data => {
     Fortnite.StampedLog("Received request for image");
-    return GetStoreImages(false).then(image => image.toString('base64'));
+    let image = await GetStoreImages(false);
+    let fileName = GetFileName(true);
+    fs.writeFileSync("./store_images/v2/" + fileName, image);
+    return "https://johnwickbot.shop/v2/" + fileName;
 });
 
 AddMessageHook('request_broadcast', data => {
