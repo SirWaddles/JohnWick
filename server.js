@@ -85,6 +85,7 @@ function QueueNextMessage() {
         let timeUntil = targetTime.getTime() - Date.now();
         setTimeout(PostNextMessage, timeUntil + 2000);
         setTimeout(() => FortniteAPI.refreshLoginToken(), timeUntil - 8000);
+        setTimeout(() => Fortnite.UpdateLocaleInformation(), timeUntil - 60000);
     });
 }
 
