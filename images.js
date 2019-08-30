@@ -84,7 +84,7 @@ async function CreateImageTile(stData) {
     await Promise.all(stData.map(async (v, idx) => {
         let lastAppeared = await getLastAppeared(v.id);
         let appearanceCount = await getAppearanceCount(v.id);
-        let lastAppearedStr = lastAppeared ? ("Last Appearance: " + moment.unix(lastAppeared).format('Do MMMM')) : "First Appearance";
+        let lastAppearedStr = lastAppeared ? ("Last Appearance: " + moment.unix(lastAppeared / 1000).format('Do MMMM')) : "First Appearance";
         var row = Math.floor(idx / cols);
         var col = idx % cols;
         var xOff = 512 * col;
