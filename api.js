@@ -9,6 +9,7 @@ const LAUNCHER_LOGIN = "https://accounts.launcher-website-prod07.ol.epicgames.co
 const LAUNCHER_WAIT = "https://accounts.launcher-website-prod07.ol.epicgames.com/login/showPleaseWait";
 const FORTNITE_STORE = "https://fortnite-public-service-prod11.ol.epicgames.com/fortnite/api/storefront/v2/catalog";
 const FORTNITE_KEYCHAIN = "https://fortnite-public-service-prod11.ol.epicgames.com/fortnite/api/storefront/v2/keychain";
+const FORTNITE_CLOUDSTORAGE = "https://fortnite-public-service-prod11.ol.epicgames.com/fortnite/api/cloudstorage/system";
 
 function getClientCredentials() {
     return fetch(OAUTH_TOKEN, {
@@ -215,6 +216,28 @@ async function refreshLoginToken() {
     loginToken = await refreshToken(loginToken);
 }
 
+async function getLatestHotfix() {
+     loginToken = await refreshToken(loginToken);
+     let fixFiles = await fetch(FORTNITE_CLOUDSTORAGE, {
+         headers: {
+             "X-EpicGames-Language": "en",
+             "Authorization": "bearer " + loginToken.access_token,
+         },
+         method: "GET",
+     }).then(r => r.json());
+     let [finalFile] = fixFiles.filter(v => v.filename == "DefaultGame.ini");
+     if (!finalFile) return "";
+     let finalUrl = FORTNITE_CLOUDSTORAGE + "/" + finalFile.uniqueFilename;
+     return fetch(finalUrl, {
+         headers: {
+             "X-EpicGames-Language": "en",
+             "Authorization": "bearer " + loginToken.access_token,
+         },
+         method: "GET",
+     }).then(r => r.text());
+}
+
+exports.getLatestHotfix = getLatestHotfix;
 exports.getStoreData = getStoreData;
 exports.getKeychain = getKeychain;
 exports.refreshLoginToken = refreshLoginToken;

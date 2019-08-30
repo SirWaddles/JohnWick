@@ -8,13 +8,11 @@
   "dependencies": {
     "abab": "^2.0.0",
     "canvas": "^2.5.0",
-    "discord.js": "^11.4.2",
     "moment": "^2.23.0",
     "node-fetch": "^2.3.0",
     "node-ipc": "^9.1.1",
     "node-wick": "^2.1.0",
-    "pg": "^7.9.0",
-    "snoowrap": "^1.17.0",
-    "sqlite3": "^4.0.9"
+    "pg": "^7.12.1",
+    "snoowrap": "^1.17.0"
   }
 }
