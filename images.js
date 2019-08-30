@@ -84,7 +84,7 @@ async function CreateImageTile(stData) {
     await Promise.all(stData.map(async (v, idx) => {
         let lastAppeared = await getLastAppeared(v.id);
         let appearanceCount = await getAppearanceCount(v.id);
-        let lastAppearedStr = lastAppeared ? ("Last Appearance: " + moment(lastAppeared).format('Do MMMM')) : "First Appearance";
+        let lastAppearedStr = lastAppeared ? ("Last Appearance: " + moment.unix(lastAppeared).format('Do MMMM')) : "First Appearance";
         var row = Math.floor(idx / cols);
         var col = idx % cols;
         var xOff = 512 * col;
@@ -163,11 +163,12 @@ async function CreateImageTile(stData) {
     return canvas.toBuffer();
 }
 
-function GetStoreImages(save) {
-    return Fortnite.GetStoreData().then(Fortnite.PrepareStoreAssets).then(data => {
-        var storeInfo = Fortnite.GetStoreInfo(data);
-        return CreateImageTile(storeInfo.map((item) => Fortnite.GetAssetData(item, save)));
-    });
+async function GetStoreImages(save) {
+    let storeData = await Fortnite.GetStoreData();
+    let assets = await Fortnite.PrepareStoreAssets(storeData);
+    let storeInfo = Fortnite.GetStoreInfo(assets);
+    let locales = await Fortnite.ResolveLocaleDB(storeInfo, 'en');
+    return CreateImageTile(storeInfo.map((item) => Fortnite.GetAssetData(item, save, locales)));
 }
 
 exports.GetStoreImages = GetStoreImages;

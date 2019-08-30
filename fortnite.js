@@ -3,8 +3,9 @@ const path = require('path');
 const { atob } = require('abab');
 const { PakExtractor, Package, read_texture_to_file, read_pak_key } = require('node-wick');
 const { GetItemPaths, AddAsset, ProcessItems } = require('./process');
-const { getStoreData, getKeychain } = require('./api');
-const { addShopHistory } = require('./db');
+const { getStoreData, getKeychain, getLatestHotfix } = require('./api');
+const { addShopHistory, getLocaleStrings, insertLocaleString } = require('./db');
+const { ReadConfig } = require('./config');
 
 var storeData = false;
 //storeData = JSON.parse(fs.readFileSync('store.json'));
@@ -158,21 +159,64 @@ async function PrepareStoreAssets(storeData) {
     return storeInfo;
 }
 
-function GetAssetItemData(assetList, assetKey) {
+function GetAssetKeys(assetList, assetKey) {
+    let assetPath = assetKey.split(':');
+    let [assetData] = assetList.filter(v => v.id == assetPath[1]);
+    if (!assetData) return false;
+    return [assetData.name, assetData.description];
+}
+
+async function ResolveLocaleDB(storeData, lang_key) {
+    const assetList = JSON.parse(fs.readFileSync('./assets.json'));
+    let items = storeData
+        .map(v => v.itemGrants)
+        .reduce((acc, v) => acc.concat(v), [])
+        .map(v => GetAssetKeys(assetList, v.templateId))
+        .reduce((acc, v) => acc.concat(v), [])
+        .map(v => v.key)
+        .filter(v => v);
+    return getLocaleStrings(items, lang_key);
+}
+
+function FindLocaleString(ftext, locales) {
+    let strs = locales.filter(v => v.key == ftext.key);
+    if (strs.length <= 0) return ftext.string;
+    return strs[0].string;
+}
+
+function GetAssetItemData(assetList, assetKey, locales) {
     let assetPath = assetKey.split(':');
     let [assetData] = assetList.filter(v => v.id == assetPath[1]);
     if (!assetData) return false;
     return {
         id: assetData.id,
         imagePath: assetData.image,
-        displayName: assetData.name,
+        displayName: FindLocaleString(assetData.name, locales),
         rarity: assetData.rarity,
-        description: assetData.description,
+        description: FindLocaleString(assetData.description, locales),
         series: assetData.series,
     };
 }
 
-function GetAssetData(storeItem, save) {
+async function UpdateLocaleInformation() {
+    let hotfix = await getLatestHotfix();
+    let replacements = hotfix
+        .split("\n")
+        .filter(v => v.startsWith("+TextReplacements"))
+        .map(v => v.slice(18))
+        .map(v => ReadConfig({str: v}));
+    for (replacement of replacements) {
+        let namespace = replacement.namespace;
+        if (!namespace) namespace = "";
+        if (!replacement.hasOwnProperty('LocalizedStrings')) continue;
+        for (lclString of replacement.LocalizedStrings) {
+            await insertLocaleString(namespace, replacement.Key, lclString[0], lclString[1]);
+        }
+    }
+    console.log("Update Complete");
+}
+
+function GetAssetData(storeItem, save, locales) {
     const assetList = JSON.parse(fs.readFileSync('./assets.json'));
     try {
         if (storeItem.hasOwnProperty('itemGrants') && storeItem.itemGrants.length > 0) {
@@ -183,7 +227,7 @@ function GetAssetData(storeItem, save) {
                 price = storeItem.dynamicBundleInfo.bundleItems.map(v => v.discountedPrice).reduce((acc, v) => acc + v, 0);
             }
 
-            let storeObjs = storeItem.itemGrants.map(v => GetAssetItemData(assetList, v.templateId)).filter(v => v);
+            let storeObjs = storeItem.itemGrants.map(v => GetAssetItemData(assetList, v.templateId, locales)).filter(v => v);
 
             if (storeObjs.length <= 0 || !storeObjs) throw "No asset found for " + storeItem.devName;
             let storeObj = storeObjs.shift();
@@ -201,7 +245,8 @@ function GetAssetData(storeItem, save) {
             return storeObj;
         }
     } catch (error) {
-        let devMatch = /\[VIRTUAL\][1-9]+ x ([\w\d\s]+) for/g;
+        console.log(error);
+        let devMatch = /\[VIRTUAL\][1-9]+ x (.+) for/g;
         let result = devMatch.exec(storeItem.devName);
         return {
             id: 'error_asset',
@@ -218,5 +263,7 @@ exports.GetAssetData = GetAssetData;
 exports.GetStoreData = GetStoreData;
 exports.GetStoreItems = GetStoreItems;
 exports.GetStoreInfo = GetStoreInfo;
+exports.UpdateLocaleInformation = UpdateLocaleInformation;
+exports.ResolveLocaleDB = ResolveLocaleDB;
 exports.PrepareStoreAssets = PrepareStoreAssets;
 exports.StampedLog = StampedLog;
