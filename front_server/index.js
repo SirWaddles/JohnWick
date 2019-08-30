@@ -1,5 +1,8 @@
 const express = require('express');
 const fs = require('fs');
+const { JWAPIToken } = require('../tokens');
+const { UpdateLocale } = require('./locale');
+const bodyparser = require('body-parser');
 const app = express();
 
 function getAssetFromId(assets, id) {
@@ -62,6 +65,8 @@ async function GetAssetList() {
     };
 }
 
+app.use(bodyparser.json({limit: '10mb'}));
+
 app.get("/api", (req, res) => {
     let data = JSON.parse(fs.readFileSync('./package.json'));
     res.json({
@@ -76,6 +81,28 @@ app.get("/api/assets", (req, res) => {
         res.append("Cache-Control", "no-store");
         res.append("Expires", expire.toUTCString());
         res.json(data);
+    });
+});
+
+app.post("/api/update_locale", (req, res) => {
+    let token = req.get("X-JWAPI-Token");
+    if (token !==  JWAPIToken) {
+        res.json({
+            success: false,
+            message: "Authentication Failed",
+        });
+        return;
+    }
+    UpdateLocale(req.body.locale, req.body.lang_key).then(r => {
+        res.json({
+            success: true,
+            message: "None",
+        });
+    }).catch(e => {
+        res.json({
+            success: false,
+            message: e.toString(),
+        });
     });
 });
 
