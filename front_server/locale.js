@@ -23,3 +23,23 @@ async function UpdateLocale(locale, lang_key) {
 }
 
 exports.UpdateLocale = UpdateLocale;
+
+async function GetLocaleStrings(keys, lang_key) {
+    let client = new Client(PGSQLConnection);
+    await client.connect();
+    let whereClause = [...Array(keys.length).keys()].map(v => "$" + (v + 2)).join(", ");
+    let params = keys.slice();
+    params.unshift(lang_key);
+
+    let rowData = await client.query("SELECT string_key, content FROM localization WHERE lang_key = $1 AND string_key IN (" + whereClause + ")", params);
+    let rows = rowData.rows.map(v => ({
+        key: v.string_key,
+        string: v.content,
+    }));
+
+    await client.end();
+
+    return rows;
+}
+
+exports.GetLocaleStrings = GetLocaleStrings;

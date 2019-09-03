@@ -10,8 +10,13 @@ const AssetStore = new Store();
 AssetStore.updateState({
     featured: null,
     daily: null,
+    locales: null,
 });
 
-GetStoreData("api/assets").then(v => AssetStore.updateState(v));
+let params = (new URL(document.location)).searchParams;
+let lang = params.get("lang");
+if (!lang) lang = "en";
+
+GetStoreData("api/assets/" + lang).then(v => AssetStore.updateState(v));
 
 export default AssetStore;

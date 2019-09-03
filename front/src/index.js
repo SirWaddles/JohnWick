@@ -8,7 +8,7 @@ import './assets.js';
 
 class AppComponent extends React.Component {
     render() {
-        return [<Intro />, <Stores />];
+        return [<Intro />, <Stores />, <div className="final-row" />];
     }
 }
 

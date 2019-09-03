@@ -1,7 +1,7 @@
 const express = require('express');
 const fs = require('fs');
 const { JWAPIToken } = require('../tokens');
-const { UpdateLocale } = require('./locale');
+const { UpdateLocale, GetLocaleStrings } = require('./locale');
 const bodyparser = require('body-parser');
 const app = express();
 
@@ -52,14 +52,24 @@ function GetStoreData(dataLink) {
     });
 }
 
-async function GetAssetList() {
+function ConsolidateKeys(assets) {
+    return assets
+        .map(v => v.itemGrants)
+        .reduce((acc, v) => acc.concat(v), [])
+        .map(v => [v.item.name.key, v.item.description.key])
+        .reduce((acc, v) => acc.concat(v), []);
+}
+
+async function GetAssetList(lang_key) {
     let datas = await Promise.all([GetStoreData('assets.json'), GetStoreData('store.json')]);
     let featuredStore = getStore(datas[1], datas[0], 'BRWeeklyStorefront');
     let dailyStore = getStore(datas[1], datas[0], 'BRDailyStorefront');
+    let localeData = await GetLocaleStrings(ConsolidateKeys([...featuredStore, ...dailyStore]), lang_key);
     let now = new Date();
     return {
         featured: featuredStore,
         daily: dailyStore,
+        locales: localeData,
         expires: datas[1].expiration,
         generated: now.toUTCString(),
     };
@@ -75,8 +85,8 @@ app.get("/api", (req, res) => {
     });
 });
 
-app.get("/api/assets", (req, res) => {
-    GetAssetList().then(data => {
+app.get("/api/assets/:langkey", (req, res) => {
+    GetAssetList(req.params.langkey).then(data => {
         let expire = new Date(data.expires);
         res.append("Cache-Control", "no-store");
         res.append("Expires", expire.toUTCString());

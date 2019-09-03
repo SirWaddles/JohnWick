@@ -8,9 +8,15 @@ class StoreItem extends React.Component {
         if (!mainItem) return null;
         let showDisplayAsset = (this.props.item.displayAsset && mainItem.type == 'AthenaCharacter');
         let displayImage = showDisplayAsset ? this.props.item.displayAsset.image : mainItem.item.image;
+        let displayName = AssetStore.getState().locales.filter(v => v.key == mainItem.item.name.key).pop();
+        if (!displayName) {
+            displayName = mainItem.item.name.string;
+        } else {
+            displayName = displayName.string;
+        }
         return <div className={this.props.shopType + "-item " + mainItem.item.rarity}>
             <div className={this.props.shopType + "-image" + (mainItem.type == 'AthenaCharacter' ? " display-asset" : " icon-asset")} style={{backgroundImage: "url('/textures/" + displayImage + "')"}} />
-            <div className="title">{mainItem.item.name}</div>
+            <div className="title">{displayName}</div>
             <div className="price"><span className="price-text">{this.props.item.price}</span></div>
         </div>;
     }
