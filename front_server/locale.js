@@ -1,10 +1,11 @@
-const { Client } = require('pg');
+const { Pool } = require('pg');
 const { PGSQLConnection } = require('../tokens');
+const DBPool = new Pool(PGSQLConnection);
 
 async function UpdateLocale(locale, lang_key) {
-    let client = new Client(PGSQLConnection);
-    await client.connect();
+    const client = await DBPool.connect();
     try {
+        await client.query('BEGIN');
         for (namespace of locale) {
             for (entry of namespace.data) {
                 let query = {
@@ -16,17 +17,19 @@ async function UpdateLocale(locale, lang_key) {
                 await client.query(query);
             }
         }
+        await client.query('COMMIT');
     } catch (e) {
+        await client.query('ROLLBACK');
         console.error(e);
+    } finally {
+        client.release();
     }
-    await client.end();
 }
 
 exports.UpdateLocale = UpdateLocale;
 
 async function GetLocaleStrings(keys, lang_key) {
-    let client = new Client(PGSQLConnection);
-    await client.connect();
+    const client = await DBPool.connect();
     let whereClause = [...Array(keys.length).keys()].map(v => "$" + (v + 2)).join(", ");
     let params = keys.slice();
     params.unshift(lang_key);
@@ -37,7 +40,7 @@ async function GetLocaleStrings(keys, lang_key) {
         string: v.content,
     }));
 
-    await client.end();
+    client.release();
 
     return rows;
 }

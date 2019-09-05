@@ -22,6 +22,16 @@ function getItemPrice(item) {
     return price;
 }
 
+function getBannerType(item) {
+    if (!item.hasOwnProperty("meta")) {
+        return null;
+    }
+    if (!item.meta.hasOwnProperty("BannerOverride")) {
+        return null;
+    }
+    return item.meta.BannerOverride;
+}
+
 function getStore(data, assets, type) {
     return data.storefronts.filter(v => v.name == type).pop().catalogEntries
     .sort((a, b) => {
@@ -37,6 +47,7 @@ function getStore(data, assets, type) {
             type: e[0],
         })),
         displayAsset: getAssetFromId(assets, v.displayAssetPath ? v.displayAssetPath.split('/').pop().split('.').pop() : null),
+        banner: getBannerType(v),
     }));
 }
 
