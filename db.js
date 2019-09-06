@@ -75,6 +75,12 @@ function insertLocaleString(namespace, key, lang_key, content) {
 
 exports.insertLocaleString = insertLocaleString;
 
+function disconnectClient() {
+    client.end();
+}
+
+exports.disconnectClient = disconnectClient;
+
 process.on('exit', function() {
     client.end();
 });

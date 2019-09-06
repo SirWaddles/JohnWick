@@ -10,16 +10,19 @@ const { ReadConfig } = require('./config');
 var storeData = false;
 //storeData = JSON.parse(fs.readFileSync('store.json'));
 
+var lastMsgTime = null;
+
 function StampedLog(message) {
     let time = new Date();
     let timeStr = time.getUTCHours() + ":" + time.getUTCMinutes() + ":" + time.getUTCSeconds() + "-" + time.getUTCMilliseconds();
-    console.log("[" + timeStr + "] " + message);
+    message = "[" + timeStr + "] " + message;
+    if (lastMsgTime) message += " (" + (time.getTime() - lastMsgTime.getTime()) + "ms)";
+    lastMsgTime = time;
+    console.log(message);
 }
 
 function RefreshStoreData() {
-    StampedLog("Getting store data");
     return getStoreData().then(store => {
-        StampedLog("Got store data");
         fs.writeFileSync('store.json', JSON.stringify(store));
         storeData = store;
         if (!storeData.hasOwnProperty('storefronts')) {
@@ -96,15 +99,12 @@ async function PrepareStoreAssets(storeList) {
     // If we still have some assets that don't have an assigned key, check the keychain
     if (requiredAssets.length > 0) {
         try {
-            StampedLog("Getting keychain");
             let chainData = await getKeychain();
             StampedLog("Keychain retreived");
             keyDatas = keyDatas.concat(chainData.map(guidStringParse));
         } catch (e) {
             console.error(e);
         }
-    } else {
-        StampedLog("Skipping Keychain");
     }
 
     if (keyDatas.length <= 0) {
@@ -164,8 +164,6 @@ async function PrepareStoreAssets(storeList) {
     let newIds = assets.map(v => v.id);
     currentAssetList = currentAssetList.filter(v => !newIds.includes(v.id)).concat(assets);
     fs.writeFileSync('./assets.json', JSON.stringify(currentAssetList));
-
-    StampedLog("Decryption complete");
 }
 
 function GetAssetKeys(assetList, assetKey) {

@@ -60,7 +60,6 @@ function ColourToHex(colour) {
 }
 
 async function CreateImageTile(stData) {
-    Fortnite.StampedLog("Creating image");
     var rows = Math.min(stData.length, Math.round(Math.sqrt(stData.length)));
     var cols = Math.ceil(stData.length / rows);
     var canvas = Canvas.createCanvas(512 * cols, 576 * rows);
@@ -158,16 +157,31 @@ async function CreateImageTile(stData) {
             ctx.drawImage(itemImage, xOff + (idx * 128), yOff + 320, 128, 128);
         }));
     }));
-
-    Fortnite.StampedLog("Image built");
-    return canvas.toBuffer();
+    Fortnite.StampedLog("Created Image");
+    return new Promise((resolve, reject) => {
+        canvas.toBuffer((err, res) => {
+            if (err === null) {
+                resolve(res);
+                return;
+            } else {
+                reject(err);
+                return;
+            }
+        }, "image/png", {
+            compressionLevel: 3,
+        });
+    });
 }
 
 async function GetStoreImages(save) {
+    Fortnite.StampedLog("Starting Image Generation");
     let storeData = await Fortnite.GetStoreData();
     let storeInfo = Fortnite.GetStoreInfo(storeData);
+    Fortnite.StampedLog("Retrieved Store Data");
     await Fortnite.PrepareStoreAssets(storeInfo);
+    Fortnite.StampedLog("Assets Prepared");
     let locales = await Fortnite.ResolveLocaleDB(storeInfo, 'en');
+    Fortnite.StampedLog("Fetched Locales");
     return CreateImageTile(storeInfo.map((item) => Fortnite.GetAssetData(item, save, locales)));
 }
 
