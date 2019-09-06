@@ -76,28 +76,40 @@ function guidStringParse(str) {
     return {guid: e[0].toLowerCase(), key: base64ToBase16(e[1]), asset: e[2]};
 }
 
-async function PrepareStoreAssets(storeData) {
+async function PrepareStoreAssets(storeList) {
     StampedLog("Decrypting Assets");
-    let storeInfo = await storeData;
-    let keyDatas = storeInfo.storefronts
-        .filter(v => v.hasOwnProperty('catalogEntries'))
-        .reduce((acc, v) => acc.concat(v.catalogEntries), [])
+    let keyDatas = storeList.slice()
         .filter(v => v.hasOwnProperty('metaInfo') && v.metaInfo.map(e => e.key).includes("EncryptionKey"))
         .map(v => v.metaInfo.filter(e => e.key == 'EncryptionKey').pop().value)
         .reduce((acc, v) => acc.concat(v.split(',').map(guidStringParse)), []);
 
-    try {
-        StampedLog("Getting keychain");
-        let chainData = await getKeychain();
-        StampedLog("Keychain retreived");
-        keyDatas = keyDatas.concat(chainData.map(guidStringParse));
-    } catch (e) {
-        console.error(e);
+    let currentAssetList = JSON.parse(fs.readFileSync('./assets.json'));
+    let currentAssetIds = currentAssetList.map(v => v.id);
+
+    // Calculate which assets we need keys for (that are not already in the shop response)
+    let requiredAssets = storeList
+        .filter(v => !(v.hasOwnProperty('metaInfo') && v.metaInfo.map(e => e.key).includes("EncryptionKey")))
+        .reduce((acc, v) => acc.concat(v.itemGrants), [])
+        .map(v => v.templateId.split(':')[1].toLowerCase())
+        .filter(v => !currentAssetIds.includes(v));
+
+    // If we still have some assets that don't have an assigned key, check the keychain
+    if (requiredAssets.length > 0) {
+        try {
+            StampedLog("Getting keychain");
+            let chainData = await getKeychain();
+            StampedLog("Keychain retreived");
+            keyDatas = keyDatas.concat(chainData.map(guidStringParse));
+        } catch (e) {
+            console.error(e);
+        }
+    } else {
+        StampedLog("Skipping Keychain");
     }
 
     if (keyDatas.length <= 0) {
         StampedLog("Nothing to decrypt");
-        return storeInfo;
+        return;
     }
     let guidList = keyDatas.map(v => v.guid);
     let pakMap = BuildPakMap().filter(v => guidList.includes(v.guid));
@@ -150,13 +162,10 @@ async function PrepareStoreAssets(storeData) {
 
     let assets = ProcessItems();
     let newIds = assets.map(v => v.id);
-    let currentAssetList = JSON.parse(fs.readFileSync('./assets.json')).filter(v => !newIds.includes(v.id));
-    currentAssetList = currentAssetList.concat(assets);
+    currentAssetList = currentAssetList.filter(v => !newIds.includes(v.id)).concat(assets);
     fs.writeFileSync('./assets.json', JSON.stringify(currentAssetList));
 
     StampedLog("Decryption complete");
-
-    return storeInfo;
 }
 
 function GetAssetKeys(assetList, assetKey) {

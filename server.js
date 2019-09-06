@@ -75,6 +75,13 @@ function PostNextMessage() {
     });
 }
 
+function UpdateLocale() {
+    if (now.getUTCHours() !== 23) {
+        return;
+    }
+    Fortnite.UpdateLocaleInformation();
+}
+
 function QueueNextMessage() {
     Fortnite.GetStoreData().then(data => {
         if (!data.hasOwnProperty('expiration')) {
@@ -83,9 +90,9 @@ function QueueNextMessage() {
         }
         let targetTime = new Date(data.expiration);
         let timeUntil = targetTime.getTime() - Date.now();
-        setTimeout(PostNextMessage, timeUntil + 2000);
+        setTimeout(PostNextMessage, timeUntil + 1000);
         setTimeout(() => FortniteAPI.refreshLoginToken(), timeUntil - 8000);
-        setTimeout(() => Fortnite.UpdateLocaleInformation(), timeUntil - 60000);
+        setTimeout(() => UpdateLocale(), timeUntil - 60000);
     });
 }
 

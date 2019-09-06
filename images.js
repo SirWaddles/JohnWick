@@ -165,8 +165,8 @@ async function CreateImageTile(stData) {
 
 async function GetStoreImages(save) {
     let storeData = await Fortnite.GetStoreData();
-    let assets = await Fortnite.PrepareStoreAssets(storeData);
-    let storeInfo = Fortnite.GetStoreInfo(assets);
+    let storeInfo = Fortnite.GetStoreInfo(storeData);
+    await Fortnite.PrepareStoreAssets(storeInfo);
     let locales = await Fortnite.ResolveLocaleDB(storeInfo, 'en');
     return CreateImageTile(storeInfo.map((item) => Fortnite.GetAssetData(item, save, locales)));
 }
