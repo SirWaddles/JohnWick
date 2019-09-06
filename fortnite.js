@@ -16,7 +16,12 @@ function StampedLog(message) {
     let time = new Date();
     let timeStr = time.getUTCHours() + ":" + time.getUTCMinutes() + ":" + time.getUTCSeconds() + "-" + time.getUTCMilliseconds();
     message = "[" + timeStr + "] " + message;
-    if (lastMsgTime) message += " (" + (time.getTime() - lastMsgTime.getTime()) + "ms)";
+    if (lastMsgTime) {
+        let timeDiff = time.getTime() - lastMsgTime.getTime();
+        if (timeDiff < 30 * 60 * 1000) {
+            message += " (" + (timeDiff) + "ms)";
+        }
+    }
     lastMsgTime = time;
     console.log(message);
 }

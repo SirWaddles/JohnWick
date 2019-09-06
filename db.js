@@ -1,86 +1,118 @@
-const { Client } = require('pg');
+const { Pool } = require('pg');
 const { PGSQLConnection } = require('./tokens');
-const client = new Client(PGSQLConnection);
+const DBPool = new Pool(PGSQLConnection);
 
-client.connect().catch(console.error);
-
-function addShopHistory(item_id) {
-    return client.query("INSERT INTO shop_history (item_id, date_appeared) VALUES ($1, $2)", [item_id, Date.now()]).catch(console.error);
+async function addShopHistory(item_id) {
+    const client = await DBPool.connect();
+    try {
+        return client.query("INSERT INTO shop_history (item_id, date_appeared) VALUES ($1, $2)", [item_id, Date.now()]);
+    } catch (e) {
+        console.error(e);
+    } finally {
+        client.release();
+    }
 }
 
 exports.addShopHistory = addShopHistory;
 
-function getLastAppeared(item_id) {
-    let dateFilter = Date.now() - (23 * 60 * 60 * 1000);
-    return client.query('SELECT date_appeared FROM shop_history WHERE item_id = $1 AND date_appeared < $2 ORDER BY date_appeared DESC LIMIT 1', [item_id, dateFilter])
-        .then(rows => {
-            if (rows.rows.length <= 0) {
-                return false;
-            }
-            return rows.rows[0].date_appeared;
-        })
-        .catch(console.error);
+async function getLastAppeared(item_id) {
+    const client = await DBPool.connect();
+    try {
+        let dateFilter = Date.now() - (23 * 60 * 60 * 1000);
+        let rows = await client.query('SELECT date_appeared FROM shop_history WHERE item_id = $1 AND date_appeared < $2 ORDER BY date_appeared DESC LIMIT 1', [item_id, dateFilter]);
+        if (rows.rows.length <= 0) return false;
+        return rows.rows[0].date_appeared;
+    } catch (e) {
+        console.error(e);
+    } finally {
+        client.release();
+    }
 }
 
 exports.getLastAppeared = getLastAppeared;
 
-function getAppearanceCount(item_id) {
-    return client.query("SELECT COUNT(item_id) AS item_count FROM shop_history WHERE item_id = $1", [item_id])
-        .then(rows => {
-            return rows.rows[0].item_count;
-        })
-        .catch(console.error);
+async function getAppearanceCount(item_id) {
+    const client = await DBPool.connect();
+    try {
+        let rows = await client.query("SELECT COUNT(item_id) AS item_count FROM shop_history WHERE item_id = $1", [item_id]);
+        return rows.rows[0].item_count;
+    } catch (e) {
+        console.error(e);
+    } finally {
+        client.release();
+    }
 }
 
 exports.getAppearanceCount = getAppearanceCount;
 
-function getLocaleString(namespace, key, lang_key) {
+async function getLocaleString(namespace, key, lang_key) {
+    const client = await DBPool.connect();
     let query = {
         name: 'retrieve-locale',
         text: 'SELECT content FROM localization WHERE namespace = $1 AND string_key = $2 AND lang_key = $3',
         values: [namespace, key, lang_key],
     };
-    return client.query(query).then(r => {
-        return r.rows[0].content;
-    });
+
+    try {
+        let rows = await client.query(query);
+        return rows.rows[0].content;
+    } catch (e) {
+        console.error(e);
+    } finally {
+        client.release();
+    }
 }
 
 exports.getLocaleString = getLocaleString;
 
 // Ignore namespaces for this, for everything item-shop, it's "" anyway.
-function getLocaleStrings(keys, lang_key) {
+async function getLocaleStrings(keys, lang_key) {
+    const client = await DBPool.connect();
     let whereClause = [...Array(keys.length).keys()].map(v => "$" + (v + 2)).join(", ");
     let params = keys.slice();
     params.unshift(lang_key);
 
-    return client.query("SELECT string_key, content FROM localization WHERE lang_key = $1 AND string_key IN (" + whereClause + ")", params).then(r => {
-        return r.rows.map(v => ({
+    try {
+        let rows = await client.query("SELECT string_key, content FROM localization WHERE lang_key = $1 AND string_key IN (" + whereClause + ")", params);
+        return rows.rows.map(v => ({
             key: v.string_key,
             string: v.content,
         }));
-    });
+    } catch (e) {
+        console.error(e);
+    } finally {
+        client.release();
+    }
 }
 
 exports.getLocaleStrings = getLocaleStrings;
 
-function insertLocaleString(namespace, key, lang_key, content) {
+async function insertLocaleString(namespace, key, lang_key, content) {
+    const client = await DBPool.connect();
     let query = {
         name: 'upsert-locale',
         text: 'INSERT INTO localization (namespace, string_key, content, lang_key) VALUES ($1, $2, $3, $4)' +
             ' ON CONFLICT ON CONSTRAINT unique_entry DO UPDATE SET content = $3',
         values: [namespace, key, content, lang_key],
     };
-    return client.query(query);
+
+    try {
+        return client.query(query);
+    } catch (e) {
+        console.error(e);
+    } finally {
+        client.release();
+    }
 }
 
 exports.insertLocaleString = insertLocaleString;
 
 function disconnectClient() {
-    client.end();
+    DBPool.end();
 }
 
 exports.disconnectClient = disconnectClient;
 
 process.on('exit', function() {
-    client.end();
+    DBPool.end();
 });

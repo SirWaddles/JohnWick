@@ -76,6 +76,7 @@ function PostNextMessage() {
 }
 
 function UpdateLocale() {
+    let now = new Date();
     if (now.getUTCHours() !== 23) {
         return;
     }
@@ -105,6 +106,7 @@ AddMessageHook('request_refresh', async data => {
     let image = await GetStoreImages(false);
     let fileName = GetFileName(true);
     fs.writeFileSync("./store_images/v2/" + fileName, image);
+    Fortnite.StampedLog("Finished Image Generation");
     return "https://johnwickbot.shop/v2/" + fileName;
 });
 
