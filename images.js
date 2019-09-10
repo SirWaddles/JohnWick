@@ -83,7 +83,7 @@ async function CreateImageTile(stData) {
     await Promise.all(stData.map(async (v, idx) => {
         let lastAppeared = await getLastAppeared(v.id);
         let appearanceCount = await getAppearanceCount(v.id);
-        let lastAppearedStr = lastAppeared ? ("Last Appearance: " + moment.unix(lastAppeared / 1000).format('Do MMMM')) : "First Appearance";
+        let lastAppearedStr = lastAppeared ? ("Last Appearance: " + moment(lastAppeared).format('Do MMMM')) : "First Appearance";
         var row = Math.floor(idx / cols);
         var col = idx % cols;
         var xOff = 512 * col;
@@ -129,8 +129,9 @@ async function CreateImageTile(stData) {
             writeStrs.forEach((str, idx) => {
                 ctx.fillText(str, xOff + 20, yOff + 518 + (idx * 20) - writeStrs.length * 20);
             });
-
-            ctx.fillText("Appearances: " + appearanceCount, xOff + 20, yOff + 530);
+            if (appearanceCount > 0) {
+                ctx.fillText("Appearances: " + appearanceCount, xOff + 20, yOff + 530);
+            }
             ctx.fillText(lastAppearedStr, xOff + 20, yOff + 550);
         }
 

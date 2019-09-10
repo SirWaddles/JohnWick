@@ -5,7 +5,8 @@ const DBPool = new Pool(PGSQLConnection);
 async function addShopHistory(item_id) {
     const client = await DBPool.connect();
     try {
-        return client.query("INSERT INTO shop_history (item_id, date_appeared) VALUES ($1, $2)", [item_id, Date.now()]);
+        let now = new Date();
+        return client.query("INSERT INTO shop_history (item_id, date_stamp) VALUES ($1, $2) ON CONFLICT DO NOTHING", [item_id, now]);
     } catch (e) {
         console.error(e);
     } finally {
@@ -18,10 +19,10 @@ exports.addShopHistory = addShopHistory;
 async function getLastAppeared(item_id) {
     const client = await DBPool.connect();
     try {
-        let dateFilter = Date.now() - (23 * 60 * 60 * 1000);
-        let rows = await client.query('SELECT date_appeared FROM shop_history WHERE item_id = $1 AND date_appeared < $2 ORDER BY date_appeared DESC LIMIT 1', [item_id, dateFilter]);
+        let now = new Date();
+        let rows = await client.query('SELECT date_stamp FROM shop_history WHERE item_id = $1 AND date_stamp < $2 ORDER BY date_stamp DESC LIMIT 1', [item_id, now]);
         if (rows.rows.length <= 0) return false;
-        return rows.rows[0].date_appeared;
+        return rows.rows[0].date_stamp;
     } catch (e) {
         console.error(e);
     } finally {
