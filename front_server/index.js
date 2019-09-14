@@ -33,7 +33,9 @@ function getBannerType(item) {
 }
 
 function getStore(data, assets, type) {
-    return data.storefronts.filter(v => v.name == type).pop().catalogEntries
+    let fronts = data.storefronts.filter(v => v.name == type);
+    if (fronts.length <= 0) return [];
+    return fronts.pop().catalogEntries
     .sort((a, b) => {
         if (a.sortPriority > b.sortPriority) return -1;
         if (a.sortPriority < b.sortPriority) return 1;
@@ -75,11 +77,13 @@ async function GetAssetList(lang_key) {
     let datas = await Promise.all([GetStoreData('assets.json'), GetStoreData('store.json')]);
     let featuredStore = getStore(datas[1], datas[0], 'BRWeeklyStorefront');
     let dailyStore = getStore(datas[1], datas[0], 'BRDailyStorefront');
-    let localeData = await GetLocaleStrings(ConsolidateKeys([...featuredStore, ...dailyStore]), lang_key);
+    let voteStore = getStore(datas[1], datas[0], 'CommunityVoteWinners');
+    let localeData = await GetLocaleStrings(ConsolidateKeys([...featuredStore, ...dailyStore, ...voteStore]), lang_key);
     let now = new Date();
     return {
         featured: featuredStore,
         daily: dailyStore,
+        votes: voteStore,
         locales: localeData,
         expires: datas[1].expiration,
         generated: now.toUTCString(),
@@ -101,6 +105,8 @@ app.get("/api/assets/:langkey", (req, res) => {
         let expire = new Date(data.expires);
         res.append("Cache-Control", "no-store");
         res.append("Expires", expire.toUTCString());
+        res.append("Access-Control-Allow-Origin", "http://localhost");
+        res.append("Access-Control-Allow-Methods", "GET");
         res.json(data);
     });
 });

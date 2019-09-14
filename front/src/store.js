@@ -90,6 +90,13 @@ class FeaturedStore extends React.Component {
     }
 }
 
+class VoteStore extends React.Component {
+    render() {
+        if (!this.props.votes) return null;
+        return this.props.votes.map((v, idx) => <StoreItem item={v} key={idx} shopType="votes" />);
+    }
+}
+
 class DailyStore extends React.Component {
     render() {
         if (!this.props.daily) return null;
@@ -103,6 +110,7 @@ class Stores extends React.Component {
             <Container store={AssetStore}>
                 <FeaturedStore />
                 <DailyStore />
+                <VoteStore />
             </Container>
         </div>;
     }

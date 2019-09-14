@@ -47,12 +47,18 @@ function GetStoreData() {
     return Promise.resolve(storeData);
 }
 
+const StoreNames = [
+    'BRDailyStorefront',
+    'BRWeeklyStorefront',
+    'CommunityVoteWinners',
+];
+
 function GetStoreItems(storeData) {
-    return storeData.storefronts.filter(v => v.name == 'BRDailyStorefront' || v.name == 'BRWeeklyStorefront').map(v => v.catalogEntries).reduce((acc, v) => acc.concat(v), []).map(v => v.devName);
+    return storeData.storefronts.filter(v => StoreNames.includes(v.name)).map(v => v.catalogEntries).reduce((acc, v) => acc.concat(v), []).map(v => v.devName);
 }
 
 function GetStoreInfo(storeData) {
-    return storeData.storefronts.filter(v => v.name == 'BRDailyStorefront' || v.name == 'BRWeeklyStorefront')
+    return storeData.storefronts.filter(v => StoreNames.includes(v.name))
         .map(v => v.catalogEntries)
         .reduce((acc, v) => acc.concat(v), []);
 }
