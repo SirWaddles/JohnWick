@@ -74,10 +74,10 @@ async function getExchangeCode(client_credentials, cookies) {
             "X-XSRF-TOKEN": xsrfCookie,
         },
     }).then(r => r.text());
-    let tokenData = await tokenRequest.text();
-    let exchangeToken = tokenData.match(/com\.epicgames\.account\.web\.widgets\.loginWithExchangeCode\('([\w]+)')/g).pop();
+    let tokenTest = /com\.epicgames\.account\.web\.widgets\.loginWithExchangeCode\('([\w]+)'/g;
+    let exchangeToken = tokenTest.exec(tokenRequest);
 
-    return exchangeToken;
+    return exchangeToken[1];
 }
 
 function getAccessToken() {
@@ -181,11 +181,21 @@ async function refreshToken(token) {
     return getLoginToken();
 }
 
-async function getLoginToken() {
+/*async function getLoginToken() {
     let launcherToken = await getAccessToken();
     let accessCode = await getAccessCode(launcherToken);
     let params = await getExchangeToken(accessCode);
     return params;
+}*/
+
+// Temporary fix, have to see what happens
+async function getLoginToken() {
+    let clientCredentials = await getClientCredentials();
+    let xsrfToken = await getXsrfToken(clientCredentials);
+    let xsrfCookies = headersToCookies(xsrfToken);
+    let exchangeToken = await getExchangeCode(clientCredentials, xsrfCookies);
+    let accessToken = await getExchangeToken(exchangeToken);
+    return accessToken;
 }
 
 let loginToken = false;
