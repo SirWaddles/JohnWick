@@ -7,6 +7,9 @@ const OAUTH_TOKEN = "https://account-public-service-prod03.ol.epicgames.com/acco
 const OAUTH_EXCHANGE = "https://account-public-service-prod03.ol.epicgames.com/account/api/oauth/exchange";
 const LAUNCHER_LOGIN = "https://accounts.launcher-website-prod07.ol.epicgames.com/login/doLauncherLogin";
 const LAUNCHER_WAIT = "https://accounts.launcher-website-prod07.ol.epicgames.com/login/showPleaseWait";
+const EPIC_CSRF = "https://www.epicgames.com/id/api/csrf";
+const EPIC_LOGIN = "https://www.epicgames.com/id/api/login";
+const EPIC_EXCHANGE = "https://www.epicgames.com/id/api/exchange";
 const FORTNITE_STORE = "https://fortnite-public-service-prod11.ol.epicgames.com/fortnite/api/storefront/v2/catalog";
 const FORTNITE_KEYCHAIN = "https://fortnite-public-service-prod11.ol.epicgames.com/fortnite/api/storefront/v2/keychain";
 const FORTNITE_CLOUDSTORAGE = "https://fortnite-public-service-prod11.ol.epicgames.com/fortnite/api/cloudstorage/system";
@@ -29,11 +32,55 @@ function headersToCookies(headers) {
     return headers.raw()['set-cookie'].map(v => v.split(";").shift().split("="));
 }
 
-function cookiesToString(cookies) {
-    return cookies.map(v => v[0] + "=" + v[1]).join("; ");
+function cookiesToObj(cookies) {
+    return cookies.reduce((acc, v) => {
+        acc[v[0]] = v[1];
+        return acc;
+    }, {});
 }
 
-function getXsrfToken(client_credentials) {
+function cookiesToString(cookies) {
+    if (Array.isArray(cookies)) {
+        return cookies.map(v => v[0] + "=" + v[1]).join("; ");
+    } else {
+        return Object.keys(cookies).map(v => v + "=" + cookies[v]).join("; ");
+    }
+}
+
+function getCsrfToken() {
+    return fetch(EPIC_CSRF, {
+        method: "GET",
+    }).then(r => r.headers).then(r => cookiesToObj(headersToCookies(r)));
+}
+
+function launcherLogin(cookies) {
+    return fetch(EPIC_LOGIN, {
+        method: "POST",
+        headers: {
+            "Cookie": cookiesToString(cookies),
+            "X-XSRF-TOKEN": cookies['XSRF-TOKEN'],
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: querystring.stringify({
+            email: FortniteToken[0],
+            password: FortniteToken[1],
+            rememberMe: false,
+        }),
+    }).then(r => r.headers).then(r => cookiesToObj(headersToCookies(r)));
+}
+
+function launcherExchange(cookies) {
+    return fetch(EPIC_EXCHANGE, {
+        method: "GET",
+        headers: {
+            "Cookie": cookiesToString(cookies),
+            "X-XSRF-TOKEN": cookies['XSRF-TOKEN'],
+        },
+    }).then(r => r.json());
+}
+
+// Older way of getting CSRF??
+/*function getXsrfToken(client_credentials) {
     let params = {
         client_id: client_credentials.client_id,
         redirectUrl: LAUNCHER_WAIT + "?" + querystring.stringify({client_id: client_credentials.client_id, rememberEmail: false}),
@@ -41,7 +88,7 @@ function getXsrfToken(client_credentials) {
     return fetch(LAUNCHER_LOGIN + "?" + querystring.stringify(params), {
         method: "GET",
     }).then(r => r.headers);
-}
+}*/
 
 async function getExchangeCode(client_credentials, cookies) {
     let xsrfCookie = cookies.filter(v => v[0] == 'XSRF-TOKEN').pop()[1];
@@ -181,6 +228,7 @@ async function refreshToken(token) {
     return getLoginToken();
 }
 
+// Older grant_type: password login flow
 /*async function getLoginToken() {
     let launcherToken = await getAccessToken();
     let accessCode = await getAccessCode(launcherToken);
@@ -188,13 +236,23 @@ async function refreshToken(token) {
     return params;
 }*/
 
-// Temporary fix, have to see what happens
-async function getLoginToken() {
+// Backup login flow (Kysune's method)
+/*async function getLoginToken() {
     let clientCredentials = await getClientCredentials();
     let xsrfToken = await getXsrfToken(clientCredentials);
     let xsrfCookies = headersToCookies(xsrfToken);
     let exchangeToken = await getExchangeCode(clientCredentials, xsrfCookies);
     let accessToken = await getExchangeToken(exchangeToken);
+    return accessToken;
+}*/
+
+// Current login flow using epicgames endpoints
+async function getLoginToken() {
+    let cookieObj = await getCsrfToken();
+    let loginResult = await launcherLogin(cookieObj);
+    Object.assign(cookieObj, loginResult);
+    let exchangeResult = await launcherExchange(cookieObj);
+    let accessToken = await getExchangeToken(exchangeResult.code);
     return accessToken;
 }
 
