@@ -8,15 +8,33 @@ Canvas.registerFont('resources/fonts/LuckiestGuy-Regular.ttf', { family: 'Luckie
 Canvas.registerFont('resources/fonts/OpenSans-Regular.ttf', { family: 'Open Sans'});
 
 const RarityColours = {
-    'Common': ['#bebebe','#646464'],
-    'Uncommon': ['#60aa3a','#175117'],
-    'Rare': ['#49acf2','#143977'],
-    'Epic': ['#b15be2','#4b2483'],
-    'Legendary': ['#d37841','#78371d'],
+    'Common': {
+        colours: ['#bebebe','#646464'],
+    },
+    'Uncommon': {
+        colours: ['#60aa3a','#175117'],
+    },
+    'Rare': {
+        colours: ['#49acf2','#143977'],
+    },
+    'Epic': {
+        colours: ['#b15be2','#4b2483'],
+    },
+    'Legendary': {
+        colours: ['#d37841','#78371d'],
+    },
 };
 
 const SeriesColours = {
-    'MarvelSeries': ['#c53334', '#761b1b'],
+    'MarvelSeries': {
+        colours: ['#c53334', '#761b1b'],
+    },
+    'CUBESeries': {
+        background: './series/kevin.png',
+    },
+    'DCUSeries': {
+        background: './series/batman.png',
+    },
 };
 
 const RarityOrder = {
@@ -69,6 +87,8 @@ async function CreateImageTile(stData) {
         let rarityA, rarityB = 5;
         if (a.hasOwnProperty('rarity')) rarityA = RarityOrder[a.rarity];
         if (b.hasOwnProperty('rarity')) rarityB = RarityOrder[b.rarity];
+        if (a.hasOwnProperty('series') && SeriesColours.hasOwnProperty(a.series)) rarityA = -1;
+        if (b.hasOwnProperty('series') && SeriesColours.hasOwnProperty(b.series)) rarityB = -1;
         if (rarityA < rarityB) {
             return -1;
         }
@@ -100,14 +120,22 @@ async function CreateImageTile(stData) {
 
         if (v.rarity) {
             let rarityColour = RarityColours[v.rarity];
-            if (v.series) {
+            if (v.series && SeriesColours.hasOwnProperty(v.series)) {
                 rarityColour = SeriesColours[v.series];
             }
-            var gradient = ctx.createRadialGradient(xOff + 256, yOff + 256, 128, xOff + 256, yOff + 256, 384);
-            gradient.addColorStop(0, rarityColour[0]);
-            gradient.addColorStop(1, rarityColour[1]);
-            ctx.fillStyle = gradient;
-            ctx.fillRect(xOff, yOff, 512, 576);
+
+            if (rarityColour.hasOwnProperty('colours')) {
+                var gradient = ctx.createRadialGradient(xOff + 256, yOff + 256, 128, xOff + 256, yOff + 256, 384);
+                gradient.addColorStop(0, rarityColour.colours[0]);
+                gradient.addColorStop(1, rarityColour.colours[1]);
+                ctx.fillStyle = gradient;
+                ctx.fillRect(xOff, yOff, 512, 576);
+            }
+
+            if (rarityColour.hasOwnProperty('background')) {
+                let bgImage = await Canvas.loadImage(rarityColour.background);
+                ctx.drawImage(bgImage, xOff, yOff, 512, 576);
+            }
         }
 
         if (filePath && fs.existsSync(filePath)) {
@@ -150,10 +178,10 @@ async function CreateImageTile(stData) {
             let itemImage = await Canvas.loadImage(itemImagePath);
 
             let rarityColour = RarityColours[extraItem.rarity];
-            if (v.series) {
+            if (v.series && SeriesColours.hasOwnProperty(v.series) && SeriesColours[v.series].hasOwnProperty('colours')) {
                 rarityColour = SeriesColours[extraItem.series];
             }
-            ctx.fillStyle = rarityColour[0];
+            ctx.fillStyle = rarityColour.colours[0];
             ctx.fillRect(xOff + (idx * 128), yOff + 320, 128, 128);
             ctx.drawImage(itemImage, xOff + (idx * 128), yOff + 320, 128, 128);
         }));

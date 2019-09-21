@@ -8,7 +8,8 @@ channels.json
 tokens.js
 live/paks/*
 live/assets/*
-store.db 
+store.db
 
 front/node_modules/
 front/dist/
+series/
