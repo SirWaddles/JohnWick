@@ -69,6 +69,7 @@ function ConsolidateKeys(assets) {
     return assets
         .map(v => v.itemGrants)
         .reduce((acc, v) => acc.concat(v), [])
+        .filter(v => v.hasOwnProperty('item') && v.item)
         .map(v => [v.item.name.key, v.item.description.key])
         .reduce((acc, v) => acc.concat(v), []);
 }
