@@ -45,6 +45,12 @@ const RarityOrder = {
     'Common': 4,
 };
 
+const PromoImages = {
+    1: '1x1.png',
+    2: '2x1.png',
+    3: '3x1.png',
+};
+
 function GetWrappedString(ctx, string, width) {
     var words = string.split(' ').map(v => v.split("\n")).map(j => [].concat(...j.map(e => [{newline: true}, e])).slice(1)).reduce((acc, v) => acc.concat(v), []);
     var writeStrings = [];
@@ -186,6 +192,14 @@ async function CreateImageTile(stData) {
             ctx.drawImage(itemImage, xOff + (idx * 128), yOff + 320, 128, 128);
         }));
     }));
+
+    let spareTiles = (cols * rows) - stData.length;
+    if (PromoImages.hasOwnProperty(spareTiles)) {
+        let promoImagePath = PromoImages[spareTiles];
+        let promoImage = await Canvas.loadImage('resources/promo_images/' + promoImagePath);
+        ctx.drawImage(promoImage, (cols - spareTiles) * 512, (rows - 1) * 576);
+    }
+
     Fortnite.StampedLog("Created Image");
     return new Promise((resolve, reject) => {
         canvas.toBuffer((err, res) => {
