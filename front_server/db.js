@@ -45,4 +45,24 @@ async function GetLocaleStrings(keys, lang_key) {
     return rows;
 }
 
+
 exports.GetLocaleStrings = GetLocaleStrings;
+
+async function GetAppearances(id) {
+    const client = await DBPool.connect();
+    try {
+        let query = {
+            name: 'fetch-appearance',
+            text: 'SELECT date_stamp FROM shop_history WHERE item_id = $1',
+            values: [id],
+        };
+        let results = await client.query(query);
+        return results.rows.map(v => v.date_stamp);
+    } catch (e) {
+        console.error(e);
+    } finally {
+        client.release();
+    }
+}
+
+exports.GetAppearances = GetAppearances;

@@ -1,14 +1,18 @@
 const express = require('express');
 const fs = require('fs');
 const { JWAPIToken } = require('../tokens');
-const { UpdateLocale, GetLocaleStrings } = require('./locale');
+const { UpdateLocale, GetLocaleStrings, GetAppearances } = require('./db');
 const bodyparser = require('body-parser');
 const app = express();
 
-function getAssetFromId(assets, id) {
+async function getAssetFromId(assets, id) {
     if (!id) return null;
     id = id.toLowerCase();
-    return assets.filter(v => v.id == id).pop();
+    let asset = assets.filter(v => v.id == id).pop();
+    if (!asset) return null;
+    return Object.assign({}, asset, {
+        appearances: await GetAppearances(id),
+    });
 }
 
 function getItemPrice(item) {
@@ -35,22 +39,22 @@ function getBannerType(item) {
 function getStore(data, assets, type) {
     let fronts = data.storefronts.filter(v => v.name == type);
     if (fronts.length <= 0) return [];
-    return fronts.pop().catalogEntries
+    return Promise.all(fronts.pop().catalogEntries
     .sort((a, b) => {
         if (a.sortPriority > b.sortPriority) return -1;
         if (a.sortPriority < b.sortPriority) return 1;
         return 0;
     })
-    .map(v => ({
+    .map(async v => ({
         price: getItemPrice(v),
         categories: v.categories,
-        itemGrants: v.itemGrants.map(e => e.templateId.split(':')).map(e => ({
-            item: getAssetFromId(assets, e[1]),
+        itemGrants: await Promise.all(v.itemGrants.map(e => e.templateId.split(':')).map(async e => ({
+            item: await getAssetFromId(assets, e[1]),
             type: e[0],
-        })),
-        displayAsset: getAssetFromId(assets, v.displayAssetPath ? v.displayAssetPath.split('/').pop().split('.').pop() : null),
+        }))),
+        displayAsset: await getAssetFromId(assets, v.displayAssetPath ? v.displayAssetPath.split('/').pop().split('.').pop() : null),
         banner: getBannerType(v),
-    }));
+    })));
 }
 
 function GetStoreData(dataLink) {
@@ -75,12 +79,13 @@ function ConsolidateKeys(assets) {
 }
 
 async function GetAssetList(lang_key) {
-    let datas = await Promise.all([GetStoreData('assets.json'), GetStoreData('store.json')]);
-    let featuredStore = getStore(datas[1], datas[0], 'BRWeeklyStorefront');
-    let dailyStore = getStore(datas[1], datas[0], 'BRDailyStorefront');
-    let voteStore = getStore(datas[1], datas[0], 'CommunityVoteWinners');
-    let localeData = await GetLocaleStrings(ConsolidateKeys([...featuredStore, ...dailyStore, ...voteStore]), lang_key);
     let now = new Date();
+    console.log("Getting Assets: " + now.toUTCString());
+    let datas = await Promise.all([GetStoreData('assets.json'), GetStoreData('store.json')]);
+    let featuredStore = await getStore(datas[1], datas[0], 'BRWeeklyStorefront');
+    let dailyStore = await getStore(datas[1], datas[0], 'BRDailyStorefront');
+    let voteStore = await getStore(datas[1], datas[0], 'CommunityVoteWinners');
+    let localeData = await GetLocaleStrings(ConsolidateKeys([...featuredStore, ...dailyStore, ...voteStore]), lang_key);
     return {
         featured: featuredStore,
         daily: dailyStore,
