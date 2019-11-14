@@ -35,6 +35,9 @@ const SeriesColours = {
     'DCUSeries': {
         background: './series/batman.png',
     },
+    'CreatorCollabSeries': {
+        background: './series/icon.png',
+    },
 };
 
 const RarityOrder = {

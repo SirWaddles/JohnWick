@@ -243,6 +243,8 @@ function GetAssetData(storeItem, save, locales) {
                 price = storeItem.prices[0].finalPrice;
             } else if (storeItem.hasOwnProperty('dynamicBundleInfo') && storeItem.dynamicBundleInfo.hasOwnProperty('bundleItems')) {
                 price = storeItem.dynamicBundleInfo.bundleItems.map(v => v.discountedPrice).reduce((acc, v) => acc + v, 0);
+                if (storeItem.dynamicBundleInfo.hasOwnProperty('discountedBasePrice'))
+                    price += storeItem.dynamicBundleInfo.discountedBasePrice;
             }
 
             let storeObjs = storeItem.itemGrants.map(v => GetAssetItemData(assetList, v.templateId, locales)).filter(v => v);
