@@ -11,7 +11,7 @@
     "moment": "^2.23.0",
     "node-fetch": "^2.3.0",
     "node-ipc": "^9.1.1",
-    "node-wick": "^2.2.0",
+    "node-wick": "^3.0.1",
     "pg": "^7.12.1",
     "sharp": "^0.23.1",
     "snoowrap": "^1.17.0",

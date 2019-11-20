@@ -212,7 +212,7 @@ function GetAssetItemData(assetList, assetKey, locales) {
         displayName: FindLocaleString(assetData.name, locales),
         rarity: assetData.rarity,
         description: FindLocaleString(assetData.description, locales),
-        series: assetData.series,
+        series: assetData.series_data ? assetData.series_data.image : false,
     };
 }
 
