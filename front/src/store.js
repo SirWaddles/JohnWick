@@ -14,7 +14,11 @@ class StoreItem extends React.Component {
         } else {
             displayName = displayName.string;
         }
-        return <div className={this.props.shopType + "-item " + mainItem.item.rarity}>
+        let style = {};
+        if (mainItem.item.hasOwnProperty('series_data') && mainItem.item.series_data.image) {
+            style.backgroundImage = "url('/textures/" + mainItem.item.series_data.image + "')";
+        }
+        return <div className={this.props.shopType + "-item " + mainItem.item.rarity} style={style}>
             <div className={this.props.shopType + "-image" + (mainItem.type == 'AthenaCharacter' ? " display-asset" : " icon-asset")} style={{backgroundImage: "url('/textures/" + displayImage + "')"}} />
             <div className="title">{displayName}</div>
             <div className="price"><span className="price-text">{this.props.item.price}</span></div>

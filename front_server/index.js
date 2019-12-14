@@ -22,6 +22,9 @@ function getItemPrice(item) {
     }
     if (item.hasOwnProperty('dynamicBundleInfo') && item.dynamicBundleInfo.hasOwnProperty('bundleItems')) {
         price = item.dynamicBundleInfo.bundleItems.map(v => v.discountedPrice).reduce((acc, v) => acc + v, 0);
+        if (item.dynamicBundleInfo.hasOwnProperty('discountedBasePrice')) {
+            price += item.dynamicBundleInfo.discountedBasePrice;
+        }
     }
     return price;
 }
@@ -36,10 +39,11 @@ function getBannerType(item) {
     return item.meta.BannerOverride;
 }
 
-function getStore(data, assets, type) {
-    let fronts = data.storefronts.filter(v => v.name == type);
+function getStore(data, assets, types) {
+    let fronts = data.storefronts.filter(v => types.includes(v.name));
     if (fronts.length <= 0) return [];
-    return Promise.all(fronts.pop().catalogEntries
+    let items = fronts.reduce((acc, v) => acc.concat(v.catalogEntries), []);
+    return Promise.all(items
     .sort((a, b) => {
         if (a.sortPriority > b.sortPriority) return -1;
         if (a.sortPriority < b.sortPriority) return 1;
@@ -82,8 +86,8 @@ async function GetAssetList(lang_key) {
     let now = new Date();
     console.log("Getting Assets: " + now.toUTCString());
     let datas = await Promise.all([GetStoreData('assets.json'), GetStoreData('store.json')]);
-    let featuredStore = await getStore(datas[1], datas[0], 'BRWeeklyStorefront');
-    let dailyStore = await getStore(datas[1], datas[0], 'BRDailyStorefront');
+    let featuredStore = await getStore(datas[1], datas[0], ['BRWeeklyStorefront', 'BRSpecialFeatured']);
+    let dailyStore = await getStore(datas[1], datas[0], ['BRDailyStorefront', 'BRSpecialDaily']);
     let voteStore = await getStore(datas[1], datas[0], 'CommunityVoteWinners');
     let localeData = await GetLocaleStrings(ConsolidateKeys([...featuredStore, ...dailyStore, ...voteStore]), lang_key);
     return {
