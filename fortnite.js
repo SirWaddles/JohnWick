@@ -122,7 +122,7 @@ async function PrepareStoreAssets(storeList, assetList) {
 
     if (keyDatas.length <= 0) {
         StampedLog("Nothing to decrypt");
-        return;
+        return assetList;
     }
     let guidList = keyDatas.map(v => v.guid);
     let pakMap = BuildPakMap().filter(v => guidList.includes(v.guid));
@@ -134,7 +134,7 @@ async function PrepareStoreAssets(storeList, assetList) {
             extractor = new PakExtractor(v.filepath, pakKey);
         } catch (e) {
             console.error(e);
-            return;
+            return assetList;
         }
 
         let paths = extractor.get_file_list().map((v, idx) => ({
