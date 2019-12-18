@@ -3,7 +3,7 @@ const path = require('path');
 const { atob } = require('abab');
 const { PakExtractor, Package, read_texture_to_file, read_pak_key } = require('node-wick');
 const { GetItemPaths, AddAsset, ProcessItems } = require('./process');
-const { getStoreData, getKeychain, getLatestHotfix } = require('./api');
+const { getStoreDataRetry, getKeychain, getLatestHotfix } = require('./api');
 const { addShopHistory, getLocaleStrings, insertLocaleString } = require('./db');
 const { ReadConfig } = require('./config');
 
@@ -27,7 +27,7 @@ function StampedLog(message) {
 }
 
 function RefreshStoreData() {
-    return getStoreData().then(store => {
+    return getStoreDataRetry().then(store => {
         fs.writeFileSync('store.json', JSON.stringify(store));
         storeData = store;
         if (!storeData.hasOwnProperty('storefronts')) {

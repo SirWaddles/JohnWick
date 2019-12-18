@@ -1,6 +1,7 @@
 const fetch = require('node-fetch');
 const fs = require('fs');
 const querystring = require('querystring');
+const AbortController = require('abort-controller');
 const { FortniteToken } = require('./tokens');
 
 const OAUTH_TOKEN = "https://account-public-service-prod03.ol.epicgames.com/account/api/oauth/token";
@@ -248,6 +249,7 @@ async function refreshToken(token) {
 
 // Current login flow using epicgames endpoints
 async function getLoginToken() {
+    console.log("Getting new Login Token");
     let cookieObj = await getCsrfToken();
     let loginResult = await launcherLogin(cookieObj);
     Object.assign(cookieObj, loginResult);
@@ -258,15 +260,38 @@ async function getLoginToken() {
 
 let loginToken = false;
 
-async function getStoreData() {
+async function getStoreData(signal) {
     loginToken = await refreshToken(loginToken);
-    return fetch(FORTNITE_STORE, {
+    let requestOptions = {
         headers: {
             "X-EpicGames-Language": "en",
             "Authorization": "bearer " + loginToken.access_token,
         },
         method: "GET",
-    }).then(r => r.json());
+    };
+    if (typeof signal !== "undefined") {
+        requestOptions.signal = signal;
+    }
+    return fetch(FORTNITE_STORE, requestOptions).then(r => r.json());
+}
+
+const MAX_RETRIES = 6;
+
+async function getStoreDataRetry() {
+    // refresh login token so that it doesn't trigger the timeout.
+    loginToken = await refreshToken(loginToken);
+    for (let i = 0; i < MAX_RETRIES; i++) {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => { controller.abort(); }, 3000);
+        try {
+            return await getStoreData(controller.signal);
+        } catch (e) {
+            console.error(e);
+            console.log("Request failed on attempt #" + i);
+        } finally {
+            clearTimeout(timeout);
+        }
+    }
 }
 
 async function getKeychain() {
@@ -307,5 +332,6 @@ async function getLatestHotfix() {
 
 exports.getLatestHotfix = getLatestHotfix;
 exports.getStoreData = getStoreData;
+exports.getStoreDataRetry = getStoreDataRetry;
 exports.getKeychain = getKeychain;
 exports.refreshLoginToken = refreshLoginToken;
