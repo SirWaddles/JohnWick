@@ -3,7 +3,7 @@ const path = require('path');
 const { atob } = require('abab');
 const { PakExtractor, Package, read_texture_to_file, read_pak_key } = require('node-wick');
 const { GetItemPaths, AddAsset, ProcessItems } = require('./process');
-const { getStoreData, getKeychain, getLatestHotfix } = require('./api');
+const { getStoreDataRetry, getKeychain, getLatestHotfix } = require('./api');
 const { addShopHistory, getLocaleStrings, insertLocaleString } = require('./db');
 const { ReadConfig } = require('./config');
 
@@ -27,7 +27,7 @@ function StampedLog(message) {
 }
 
 function RefreshStoreData() {
-    return getStoreData().then(store => {
+    return getStoreDataRetry().then(store => {
         fs.writeFileSync('store.json', JSON.stringify(store));
         storeData = store;
         if (!storeData.hasOwnProperty('storefronts')) {
@@ -51,6 +51,8 @@ const StoreNames = [
     'BRDailyStorefront',
     'BRWeeklyStorefront',
     'CommunityVoteWinners',
+    'BRSpecialDaily',
+    'BRSpecialFeatured',
 ];
 
 function GetStoreItems(storeData) {
@@ -90,7 +92,7 @@ function guidStringParse(str) {
     return {guid: e[0].toLowerCase(), key: base64ToBase16(e[1]), asset: e[2]};
 }
 
-async function PrepareStoreAssets(storeList) {
+async function PrepareStoreAssets(storeList, assetList) {
     StampedLog("Decrypting Assets");
     let keyDatas = storeList.slice()
         .filter(v => v.hasOwnProperty('metaInfo') && v.metaInfo.map(e => e.key).includes("EncryptionKey"))
@@ -120,7 +122,7 @@ async function PrepareStoreAssets(storeList) {
 
     if (keyDatas.length <= 0) {
         StampedLog("Nothing to decrypt");
-        return;
+        return assetList;
     }
     let guidList = keyDatas.map(v => v.guid);
     let pakMap = BuildPakMap().filter(v => guidList.includes(v.guid));
@@ -132,7 +134,7 @@ async function PrepareStoreAssets(storeList) {
             extractor = new PakExtractor(v.filepath, pakKey);
         } catch (e) {
             console.error(e);
-            return;
+            return assetList;
         }
 
         let paths = extractor.get_file_list().map((v, idx) => ({
@@ -153,6 +155,7 @@ async function PrepareStoreAssets(storeList) {
     for (let i = 0; i < assetFiles.length; i++) {
         let filename = assetFiles[i];
         if (filename.endsWith('.uexp')) continue;
+        if (filename.endsWith('.ubulk')) continue;
         let fileAsset = filename.slice(0, -7);
         let asset = false;
         try {
@@ -171,10 +174,11 @@ async function PrepareStoreAssets(storeList) {
         AddAsset(object, fileAsset);
     }
 
-    let assets = ProcessItems();
+    let assets = ProcessItems(assetList);
     let newIds = assets.map(v => v.id);
     currentAssetList = currentAssetList.filter(v => !newIds.includes(v.id)).concat(assets);
     fs.writeFileSync('./assets.json', JSON.stringify(currentAssetList));
+    return currentAssetList;
 }
 
 function GetAssetKeys(assetList, assetKey) {
@@ -234,8 +238,11 @@ async function UpdateLocaleInformation() {
     console.log("Update Complete");
 }
 
-function GetAssetData(storeItem, save, locales) {
-    const assetList = JSON.parse(fs.readFileSync('./assets.json'));
+function GetCurrentAssetList() {
+    return JSON.parse(fs.readFileSync('./assets.json'));
+}
+
+function GetAssetData(storeItem, save, locales, assetList) {
     try {
         if (storeItem.hasOwnProperty('itemGrants') && storeItem.itemGrants.length > 0) {
             let price = 0;
@@ -286,4 +293,5 @@ exports.GetStoreInfo = GetStoreInfo;
 exports.UpdateLocaleInformation = UpdateLocaleInformation;
 exports.ResolveLocaleDB = ResolveLocaleDB;
 exports.PrepareStoreAssets = PrepareStoreAssets;
+exports.GetCurrentAssetList = GetCurrentAssetList;
 exports.StampedLog = StampedLog;

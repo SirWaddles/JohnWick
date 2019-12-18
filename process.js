@@ -1,11 +1,3 @@
-const AssetList = {};
-
-function buildImagePath(path) {
-    if (!path) return false;
-    path = path.asset_path_name;
-    return path.split("/").pop().split(".")[0].toLowerCase() + ".png";
-}
-
 const RarityLevels = {
     "EFortRarity::Common": "Common",
     "EFortRarity::Rare": "Rare",
@@ -18,84 +10,87 @@ function buildRarity(rarity) {
     return RarityLevels[rarity.toString()];
 }
 
+function makeEmptyHashList(data) {
+    return data.reduce((acc, v) => Object.assign(acc, {[v]: {}}), {});
+}
+
+function isObject(obj) {
+    return (!!obj) && (obj.constructor === Object);
+}
+
 function findImport(definition) {
     if (!definition) return false;
-    return definition.toLowerCase();
+    if (isObject(definition)) return false;
+    return definition[0].toLowerCase();
+}
+
+function findAsset(location) {
+    if (!location) return false;
+    return location.asset_path_name.split("/").pop().split(".")[0].toLowerCase();
+}
+
+function buildImagePath(path) {
+    if (!path) return false;
+    return findAsset(path) + ".png";
+}
+
+function processAsset(data) {
+    let processed = {};
+    if (data.hasOwnProperty('DisplayName')) {
+        processed.name = data.DisplayName;
+    }
+    if (data.hasOwnProperty('Description')) {
+        processed.description = data.Description;
+    }
+    if (data.hasOwnProperty('LargePreviewImage')) {
+        processed.image = buildImagePath(data.LargePreviewImage);
+    }
+    if (data.hasOwnProperty('Series')) {
+        processed.series = findImport(data.Series);
+    }
+
+    return processed;
 }
 
 const AssetProcessors = {
-    "FortHeroType": asset => ({
-        name: asset.DisplayName ? asset.DisplayName : false,
-        description: asset.Description ? asset.Description : false,
-        image: buildImagePath(asset.LargePreviewImage),
-    }),
+    "FortHeroType": asset => ({}),
     "AthenaPickaxeItemDefinition": asset => ({
-        name: asset.DisplayName ? asset.DisplayName : false,
-        description: asset.Description ? asset.Description : false,
-        image: buildImagePath(asset.LargePreviewImage),
         rarity: buildRarity(asset.Rarity),
-        series: asset.hasOwnProperty("Series") ? asset.Series : null,
         definition: findImport(asset.WeaponDefinition),
     }),
     "AthenaGliderItemDefinition": asset => ({
-        name: asset.DisplayName ? asset.DisplayName : false,
-        description: asset.Description ? asset.Description : false,
-        image: buildImagePath(asset.LargePreviewImage),
         rarity: buildRarity(asset.Rarity),
-        series: asset.hasOwnProperty("Series") ? asset.Series : null,
     }),
     "AthenaCharacterItemDefinition": asset => ({
-        name: asset.DisplayName ? asset.DisplayName : false,
-        description: asset.Description ? asset.Description : false,
         rarity: buildRarity(asset.Rarity),
-        series: asset.hasOwnProperty("Series") ? asset.Series : null,
         definition: findImport(asset.HeroDefinition),
     }),
     "AthenaPetCarrierItemDefinition": asset => ({
-        name: asset.DisplayName ? asset.DisplayName : false,
-        description: asset.Description ? asset.Description : false,
-        image: buildImagePath(asset.LargePreviewImage),
         rarity: buildRarity(asset.Rarity),
     }),
     "AthenaMusicPackItemDefinition": asset => ({
-        name: asset.DisplayName ? asset.DisplayName : false,
-        description: asset.Description ? asset.Description : false,
-        image: buildImagePath(asset.LargePreviewImage),
         rarity: buildRarity(asset.Rarity),
     }),
     "AthenaSkyDiveContrailItemDefinition": asset => ({
-        name: asset.DisplayName ? asset.DisplayName : false,
-        description: asset.Description ? asset.Description : false,
-        image: buildImagePath(asset.LargePreviewImage),
         rarity: buildRarity(asset.Rarity),
     }),
     "AthenaBackpackItemDefinition": asset => ({
-        name: asset.DisplayName ? asset.DisplayName : false,
-        description: asset.Description ? asset.Description : false,
-        image: buildImagePath(asset.LargePreviewImage),
         rarity: buildRarity(asset.Rarity),
-        series: asset.hasOwnProperty("Series") ? asset.Series : null,
     }),
     "AthenaItemWrapDefinition": asset => ({
-        name: asset.DisplayName ? asset.DisplayName : false,
-        description: asset.Description ? asset.Description : false,
-        image: buildImagePath(asset.LargePreviewImage),
         rarity: buildRarity(asset.Rarity),
-        series: asset.hasOwnProperty("Series") ? asset.Series : null,
     }),
     "FortWeaponMeleeItemDefinition": asset => ({
-        name: asset.DisplayName ? asset.DisplayName : false,
-        description: asset.Description ? asset.Description : false,
-        image: buildImagePath(asset.LargePreviewImage),
         rarity: buildRarity(asset.Rarity),
-        series: asset.hasOwnProperty("Series") ? asset.Series : null,
+    }),
+    "FortWeaponMeleeDualWieldItemDefinition": asset => ({
+        rarity: buildRarity(asset.Rarity),
     }),
     "AthenaDanceItemDefinition": asset => ({
-        name: asset.DisplayName ? asset.DisplayName : false,
-        description: asset.Description ? asset.Description : false,
-        image: buildImagePath(asset.LargePreviewImage),
         rarity: buildRarity(asset.Rarity),
-        series: asset.hasOwnProperty("Series") ? asset.Series : null,
+    }),
+    "FortItemSeriesDefinition": asset => ({
+        image: buildImagePath(asset.BackgroundTexture),
     }),
     "FortMtxOfferData": asset => {
         if (asset.hasOwnProperty('TileImage') && asset.TileImage.hasOwnProperty('ResourceObject')) {
@@ -106,7 +101,7 @@ const AssetProcessors = {
         }
         if (asset.hasOwnProperty('DetailsImage') && asset.DetailsImage.hasOwnProperty('ResourceObject')) {
             return {
-                import: findImport(asset.TileImage.ResourceObject),
+                import: findImport(asset.DetailsImage.ResourceObject),
                 image: findImport(asset.DetailsImage.ResourceObject) + '.png',
             };
         }
@@ -115,15 +110,9 @@ const AssetProcessors = {
         };
     },
     "FortTokenType": asset => ({
-        name: asset.DisplayName ? asset.DisplayName : false,
-        description: asset.Description ? asset.Description : false,
-        image: buildImagePath(asset.LargePreviewImage),
         rarity: buildRarity(asset.Rarity),
     }),
     "FortBannerTokenType": asset => ({
-        name: asset.DisplayName ? asset.DisplayName : false,
-        description: asset.Description ? asset.Description : false,
-        image: buildImagePath(asset.LargePreviewImage),
         rarity: buildRarity(asset.Rarity),
     }),
     "MaterialInstanceConstant": asset => {
@@ -138,41 +127,72 @@ const AssetProcessors = {
     },
 };
 
+const ItemList = [];
+const DefinitionProcessors = [
+    'FortHeroType',
+    'FortWeaponMeleeItemDefinition',
+    'FortWeaponMeleeDualWieldItemDefinition',
+];
+const FinalProcessors = [
+    'AthenaPickaxeItemDefinition',
+    'AthenaGliderItemDefinition',
+    'AthenaBackpackItemDefinition',
+    'AthenaCharacterItemDefinition',
+    'AthenaItemWrapDefinition',
+    'AthenaMusicPackItemDefinition',
+    'AthenaSkyDiveContrailItemDefinition',
+    'AthenaDanceItemDefinition',
+    'AthenaPetCarrierItemDefinition',
+    'FortTokenType',
+    'FortBannerTokenType',
+    'FortMtxOfferData',
+    'FortItemSeriesDefinition',
+];
+
+let AssetList = makeEmptyHashList(Object.keys(AssetProcessors));
+
 function AddAsset(asset, assetName) {
     if (!AssetProcessors.hasOwnProperty(asset.export_type)) return false;
-    if (!AssetList.hasOwnProperty(asset.export_type)) AssetList[asset.export_type] = {};
-    AssetList[asset.export_type][assetName] = (AssetProcessors[asset.export_type](asset));
+    let pAsset = Object.assign(processAsset(asset), AssetProcessors[asset.export_type](asset));
+    AssetList[asset.export_type][assetName] = pAsset;
 }
 
-const ItemList = [];
+function ProcessItems(initial) {
+    let definitions = DefinitionProcessors.reduce((acc, v) => Object.assign(acc, AssetList[v]), {});
 
-function ProcessItems() {
-    let definitions = Object.assign({}, AssetList.FortHeroType, AssetList.FortWeaponMeleeItemDefinition);
-
-    if (AssetList.hasOwnProperty('FortMtxOfferData') && AssetList.hasOwnProperty('MaterialInstanceConstant')) {
-        Object.keys(AssetList.FortMtxOfferData).forEach(itemId => {
-            let item = AssetList.FortMtxOfferData[itemId];
-            if (!item.hasOwnProperty('import')) return;
-            if (AssetList.MaterialInstanceConstant.hasOwnProperty(item.import)) {
-                if (AssetList.MaterialInstanceConstant[item.import].hasOwnProperty('images')) {
-                    item.image = AssetList.MaterialInstanceConstant[item.import].images.pop();
-                }
+    for (item in Object.values(AssetList.FortMtxOfferData)) {
+        if (!item.hasOwnProperty('import')) continue;
+        if (AssetList.MaterialInstanceConstant.hasOwnProperty(item.import)) {
+            if (AssetList.MaterialInstanceConstant[item.import].hasOwnProperty('images')) {
+                item.image = AssetList.MaterialInstanceConstant[item.import].images.pop();
             }
-        });
+        }
     }
 
-    let items = Object.assign({}, AssetList.AthenaPickaxeItemDefinition, AssetList.AthenaGliderItemDefinition,
-        AssetList.AthenaBackpackItemDefinition, AssetList.AthenaCharacterItemDefinition, AssetList.AthenaItemWrapDefinition, AssetList.AthenaMusicPackItemDefinition, AssetList.AthenaSkyDiveContrailItemDefinition,
-        AssetList.AthenaDanceItemDefinition, AssetList.AthenaPetCarrierItemDefinition, AssetList.FortTokenType, AssetList.FortBannerTokenType, AssetList.FortMtxOfferData);
+    let items = FinalProcessors.reduce((acc, v) => Object.assign(acc, AssetList[v]), {});
+    let processedItems = [];
+    let series = AssetList.FortItemSeriesDefinition;
 
-    Object.keys(items).forEach(itemId => {
+    for (itemId in items) {
         let item = items[itemId];
         if (item.hasOwnProperty('definition') && definitions.hasOwnProperty(item.definition) && definitions[item.definition].image) {
             item.image = definitions[item.definition].image;
         }
+        if (item.hasOwnProperty('series')) {
+            if (series.hasOwnProperty(item.series)) {
+                item.series_data = series[item.series];
+            } else if (typeof initial !== 'undefined') {
+                let [series_item] = initial.filter(v => v.id == item.series);
+                if (series_item) {
+                    item.series_data = series_item;
+                }
+            }
+        }
         item.id = itemId;
-    });
-    return Object.values(items);
+        processedItems.push(item);
+    }
+
+    return processedItems;
 }
 
 const AssetPaths = [
@@ -185,6 +205,7 @@ const AssetPaths = [
     'Athena/Items/Cosmetics/Pickaxes',
     'Athena/Items/Cosmetics/ItemWraps',
     'Athena/Items/Cosmetics/PetCarriers',
+    'Athena/Items/Cosmetics/Series',
     'Athena/Items/BannerToken',
     'Athena/Items/Weapons',
     'Athena/Heroes',
@@ -204,23 +225,28 @@ const AssetPaths = [
     'UI/Foundation/Textures/Icons/Pets',
     'UI/Foundation/Textures/Icons/Weapons/Items',
     'UI/Foundation/Textures/Icons/Wraps',
-    '2dAssets/Music/Season6/PreviewImages',
-    '2dAssets/Music/Season7/PreviewImages',
-    '2dAssets/Music/Season8/PreviewImages',
-    '2dAssets/Music/Season9/PreviewImages',
-    '2dAssets/Music/Season10/PreviewImages',
-    '2dAssets/Banners/Season9',
     'Athena/Items/Cosmetics/Contrails/',
     'UI/Foundation/Textures/Icons/Skydiving/FX-Trails/',
+    {path: '2dAssets/Music', subdirs: true},
+    {path: '2dAssets/Banners', subdirs: true},
+    {path: 'UI/Series/Art', subdirs: true},
 ];
 
 function GetItemPaths(paths) {
     return paths.filter(path => {
         return AssetPaths.map(v => {
-            let index = path.path.indexOf(v);
-            if (index === -1) return false;
-            if (path.path.slice(index + v.length + 1).includes('/')) return false;
-            return true;
+            if (typeof v === 'string') {
+                let index = path.path.indexOf(v);
+                if (index === -1) return false;
+                if (path.path.slice(index + v.length + 1).includes('/')) return false;
+                return true;
+            }
+            if (v.hasOwnProperty('subdirs') && v.subdirs) {
+                let index = path.path.indexOf(v.path);
+                if (index === -1) return false;
+                return true;
+            }
+            return false;
         }).filter(v => v).length > 0;
     });
 }

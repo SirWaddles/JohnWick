@@ -188,11 +188,12 @@ async function GetStoreImages(save) {
     let storeData = await Fortnite.GetStoreData();
     let storeInfo = Fortnite.GetStoreInfo(storeData);
     Fortnite.StampedLog("Retrieved Store Data");
-    await Fortnite.PrepareStoreAssets(storeInfo);
+    let assetList = Fortnite.GetCurrentAssetList();
+    assetList = await Fortnite.PrepareStoreAssets(storeInfo, assetList);
     Fortnite.StampedLog("Assets Prepared");
     let locales = await Fortnite.ResolveLocaleDB(storeInfo, 'en');
     Fortnite.StampedLog("Fetched Locales");
-    return CreateImageTile(storeInfo.map((item) => Fortnite.GetAssetData(item, save, locales)));
+    return CreateImageTile(storeInfo.map((item) => Fortnite.GetAssetData(item, save, locales, assetList)));
 }
 
 exports.GetStoreImages = GetStoreImages;
