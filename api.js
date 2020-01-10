@@ -54,20 +54,32 @@ function getCsrfToken() {
     }).then(r => r.headers).then(r => cookiesToObj(headersToCookies(r)));
 }
 
-function launcherLogin(cookies) {
-    return fetch(EPIC_LOGIN, {
-        method: "POST",
-        headers: {
-            "Cookie": cookiesToString(cookies),
-            "X-XSRF-TOKEN": cookies['XSRF-TOKEN'],
-            'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: querystring.stringify({
-            email: FortniteToken[0],
-            password: FortniteToken[1],
-            rememberMe: false,
-        }),
-    }).then(r => r.headers).then(r => cookiesToObj(headersToCookies(r)));
+async function launcherLogin(cookies) {
+    let code = 409;
+    let result = false;
+    let xsrfToken = cookies['XSRF-TOKEN'];
+    while (code == 409) {
+        console.log("Fetching Login Data");
+        result = await fetch(EPIC_LOGIN, {
+            method: "POST",
+            headers: {
+                "Cookie": cookiesToString(cookies),
+                "X-XSRF-TOKEN": xsrfToken,
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: querystring.stringify({
+                email: FortniteToken[0],
+                password: FortniteToken[1],
+                rememberMe: false,
+            }),
+        });
+        code = result.status;
+        cookies = cookiesToObj(headersToCookies(result.headers));
+        if (code == 409) {
+            console.log(await result.json());
+        }
+    }
+    return cookies;
 }
 
 function launcherExchange(cookies) {
