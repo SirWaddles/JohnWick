@@ -18,6 +18,6 @@ let params = (new URL(document.location)).searchParams;
 let lang = params.get("lang");
 if (!lang) lang = "en";
 
-GetStoreData("https://johnwickbot.shop/api/assets/" + lang).then(v => AssetStore.updateState(v));
+GetStoreData("https://wickshopbot.com/api/assets/" + lang).then(v => AssetStore.updateState(v));
 
 export default AssetStore;

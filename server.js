@@ -98,7 +98,7 @@ function QueueNextMessage() {
 }
 
 AddMessageHook('request_image', data => {
-    return "https://johnwickbot.shop/" + GetFileName();
+    return "https://wickshopbot.com/" + GetFileName();
 });
 
 AddMessageHook('request_refresh', async data => {
@@ -107,7 +107,7 @@ AddMessageHook('request_refresh', async data => {
     let fileName = GetFileName(true);
     fs.writeFileSync("./store_images/v2/" + fileName, image);
     Fortnite.StampedLog("Finished Image Generation");
-    return "https://johnwickbot.shop/v2/" + fileName;
+    return "https://wickshopbot.com/v2/" + fileName;
 });
 
 AddMessageHook('request_broadcast', data => {
