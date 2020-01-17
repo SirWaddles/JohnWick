@@ -84,7 +84,6 @@ function ConsolidateKeys(assets) {
 
 async function GetAssetList(lang_key) {
     let now = new Date();
-    console.log("Getting Assets: " + now.toUTCString());
     let datas = await Promise.all([GetStoreData('assets.json'), GetStoreData('store.json')]);
     let featuredStore = await getStore(datas[1], datas[0], ['BRWeeklyStorefront', 'BRSpecialFeatured']);
     let dailyStore = await getStore(datas[1], datas[0], ['BRDailyStorefront', 'BRSpecialDaily']);
@@ -110,15 +109,47 @@ app.get("/api", (req, res) => {
     });
 });
 
-app.get("/api/assets/:langkey", (req, res) => {
-    GetAssetList(req.params.langkey).then(data => {
-        let expire = new Date(data.expires);
+const RateLimits = {};
+const SIX_HOURS = 6 * 60 * 60 * 1000;
+const MAX_REQUESTS = 10;
+
+app.get("/api/assets/:langkey", async (req, res) => {
+    if (!RateLimits.hasOwnProperty(req.ip)) {
+        RateLimits[req.ip] = {
+            requests: 1,
+            lastRequest: new Date(),
+        };
+    }
+    let rates = RateLimits[req.ip];
+    let now = new Date();
+    rates.lastRequest = now;
+    if ((now - rates.lastRequest) < SIX_HOURS) {
+        rates.requests += 1;
+    } else {
+        rates.requests = 1;
+    }
+    if (rates.requests >= MAX_REQUESTS) {
+        console.log("Rate limited: " + req.ip);
+        res.json({
+            error: "RATE_LIMIT",
+            message: "You have exceeded the maximum number of requests. Please try again later",
+        });
+        return;
+    }
+    try {
+        const assets = await GetAssetList(req.params.langkey);
+        let expire = new Date(assets.expires);
         res.append("Cache-Control", "no-store");
         res.append("Expires", expire.toUTCString());
         res.append("Access-Control-Allow-Origin", "http://localhost");
         res.append("Access-Control-Allow-Methods", "GET");
-        res.json(data);
-    });
+        res.json(assets);
+    } catch (e) {
+        console.error(e);
+        res.json({
+            error: 'An unexpected error ocurred. It has been logged though. So uhhh... sorry.',
+        });
+    }
 });
 
 app.post("/api/update_locale", (req, res) => {

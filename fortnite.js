@@ -28,12 +28,12 @@ function StampedLog(message) {
 
 function RefreshStoreData() {
     return getStoreDataRetry().then(store => {
+        if (!store.hasOwnProperty('storefronts')) {
+            console.error(store);
+            return;
+        }
         fs.writeFileSync('store.json', JSON.stringify(store));
         storeData = store;
-        if (!storeData.hasOwnProperty('storefronts')) {
-            console.error(storeData);
-            throw "Invalid store found";
-        }
         return store;
     });
 }
