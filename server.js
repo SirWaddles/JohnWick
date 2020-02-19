@@ -62,9 +62,8 @@ async function PostShopMessage() {
     Fortnite.StampedLog("Sent shop image to subs");
 }
 
-function PostNextMessage() {
-    let now = new Date();
-    if (now.getUTCHours() !== 0) {
+function PostNextMessage(lastShopId, newShopId) {
+    if (lastShopId === newShopId) {
         QueueNextMessage();
         return;
     }
@@ -84,14 +83,18 @@ function UpdateLocale() {
 }
 
 function QueueNextMessage() {
+    const lastShopId = Fortnite.MakeShopIdentifier(Fortnite.GetCurrentStoreData());
     Fortnite.GetStoreData().then(data => {
         if (!data.hasOwnProperty('expiration')) {
             console.error(data);
             throw "Invalid data, cannot queue";
         }
+
+        const newShopId = Fortnite.MakeShopIdentifier(data);
+
         let targetTime = new Date(data.expiration);
         let timeUntil = targetTime.getTime() - Date.now();
-        setTimeout(PostNextMessage, timeUntil + 1000);
+        setTimeout(() => PostNextMessage(lastShopId, newShopId), timeUntil + 1000);
         setTimeout(() => FortniteAPI.refreshLoginToken(), timeUntil - 8000);
         setTimeout(() => UpdateLocale(), timeUntil - 60000);
     });

@@ -209,6 +209,7 @@ function getRefreshToken(token) {
     if (typeof token == 'undefined' || !token.hasOwnProperty('refresh_token')) {
         throw "Refresh token undefined";
     }
+    console.log("Getting Refresh Token");
     return fetch(OAUTH_TOKEN, {
         headers: {
             "Authorization": "basic " + FortniteToken[3],
@@ -237,7 +238,13 @@ function getRefreshToken(token) {
 async function refreshToken(token) {
     if (!token) return getLoginToken();
     let expire = new Date(token.expires_at);
+    expire.setUTCHours(expire.getUTCHours() - 1);
+    let refreshExpire = new Date(token.refresh_expires_at);
+    refreshExpire.setUTCHours(refreshExpire.getUTCHours() - 1);
     if (Date.now() < expire) return token;
+    if (Date.now() < refreshExpire) {
+        return getRefreshToken(token);
+    }
     return getLoginToken();
 }
 

@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 const { atob } = require('abab');
 const { PakExtractor, Package, read_texture_to_file, read_pak_key } = require('node-wick');
 const { GetItemPaths, AddAsset, ProcessItems } = require('./process');
@@ -27,6 +28,7 @@ function StampedLog(message) {
 }
 
 function RefreshStoreData() {
+    StampedLog("Getting Store Data");
     return getStoreDataRetry().then(store => {
         if (!store.hasOwnProperty('storefronts')) {
             console.error(store);
@@ -36,6 +38,11 @@ function RefreshStoreData() {
         storeData = store;
         return store;
     });
+}
+
+function GetCurrentStoreData() {
+    if (!fs.existsSync('./store.json')) return null;
+    return JSON.parse(fs.readFileSync('./store.json'));
 }
 
 function GetStoreData() {
@@ -62,7 +69,20 @@ function GetStoreItems(storeData) {
 function GetStoreInfo(storeData) {
     return storeData.storefronts.filter(v => StoreNames.includes(v.name))
         .map(v => v.catalogEntries)
-        .reduce((acc, v) => acc.concat(v), []);
+        .flat();
+}
+
+function MakeShopIdentifier(shopData) {
+    let shopString = GetStoreInfo(shopData)
+        .map(v => v.itemGrants)
+        .filter(v => v)
+        .flat()
+        .map(v => v.templateId)
+        .sort();
+
+    const hash = crypto.createHash('sha256');
+    hash.update(shopString.join("|"));
+    return hash.digest('hex');
 }
 
 // from https://stackoverflow.com/questions/39460182/decode-base64-to-hexadecimal-string-with-javascript
@@ -77,7 +97,7 @@ function base64ToBase16(base64) {
 // *
 
 function BuildPakMap() {
-    return fs.readdirSync('./live/paks/', 'utf8').map(v => {
+    return fs.readdirSync('./live/paks/', 'utf8').filter(v => v.endsWith('.pak')).map(v => {
         let filepath = './live/paks/' + v;
         return {
             file: v,
@@ -288,6 +308,8 @@ function GetAssetData(storeItem, save, locales, assetList) {
 
 exports.GetAssetData = GetAssetData;
 exports.GetStoreData = GetStoreData;
+exports.GetCurrentStoreData = GetCurrentStoreData;
+exports.MakeShopIdentifier = MakeShopIdentifier;
 exports.GetStoreItems = GetStoreItems;
 exports.GetStoreInfo = GetStoreInfo;
 exports.UpdateLocaleInformation = UpdateLocaleInformation;

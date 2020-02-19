@@ -122,12 +122,12 @@ app.get("/api/assets/:langkey", async (req, res) => {
     }
     let rates = RateLimits[req.ip];
     let now = new Date();
-    rates.lastRequest = now;
     if ((now - rates.lastRequest) < SIX_HOURS) {
         rates.requests += 1;
     } else {
         rates.requests = 1;
     }
+    rates.lastRequest = now;
     if (rates.requests >= MAX_REQUESTS) {
         console.log("Rate limited: " + req.ip);
         res.json({
