@@ -53,26 +53,51 @@ function GetFileName(extra) {
     return fileName;
 }
 
-async function PostShopMessage() {
+let lastShopId = null;
+
+async function PostShopMessage(storeData) {
+    let newShopId = Fortnite.MakeShopIdentifier(storeData);
+    if (lastShopId === newShopId) {
+        return;
+    }
+    lastShopId = newShopId;
+    
     Fortnite.StampedLog("Posting shop image");
-    let image = await GetStoreImages(true);
+    let image = await GetStoreImages(true, storeData);
     let fileName = GetFileName();
     fs.writeFileSync('./store_images/' + fileName, image);
     BroadcastMessage('image', fileName);
     Fortnite.StampedLog("Sent shop image to subs");
 }
 
-function PostNextMessage(lastShopId, newShopId) {
-    if (lastShopId === newShopId) {
-        QueueNextMessage();
-        return;
-    }
-    PostShopMessage().then(() => {
-        QueueNextMessage();
-    }).catch(e => {
-        console.error(e);
+let EventQueue = [];
+
+function AddEventToQueue(evt, time) {
+    EventQueue.push({
+        evt, time,
     });
 }
+
+function WaitUntil(time) {
+    return new Promise((resolve, reject) => {
+        AddEventToQueue(resolve, time);
+    });
+}
+
+/**
+ * Using event loop like this because setTimeout seems to have some jitter sometimes.
+ * This may not be as accurate, but something should never occur **before** the designated timestamp.
+ * Which in this case is more important.
+ */
+setInterval(() => {
+    const now = new Date();
+    for (let evt of EventQueue) {
+        if (now < evt.time) continue;
+        evt.evt();
+    }
+
+    EventQueue = EventQueue.filter(v => now < v.time);
+}, 300);
 
 function UpdateLocale() {
     let now = new Date();
@@ -82,22 +107,31 @@ function UpdateLocale() {
     Fortnite.UpdateLocaleInformation();
 }
 
-function QueueNextMessage() {
-    const lastShopId = Fortnite.MakeShopIdentifier(Fortnite.GetCurrentStoreData());
-    Fortnite.GetStoreData().then(data => {
-        if (!data.hasOwnProperty('expiration')) {
-            console.error(data);
-            throw "Invalid data, cannot queue";
+async function QueueShopLoop() {
+    let storeData = await Fortnite.GetStoreData();
+    lastShopId = Fortnite.MakeShopIdentifier(storeData);
+
+    while (true) {
+        if (!storeData.hasOwnProperty('expiration')) {
+            throw new Error("invalid expiration");
         }
+        let expiration = new Date(storeData.expiration);
 
-        const newShopId = Fortnite.MakeShopIdentifier(data);
+        // Update locale - 60 seconds before shop
+        AddEventToQueue(() => {
+            UpdateLocale();
+        }, new Date(expiration.getTime() - 60000));
 
-        let targetTime = new Date(data.expiration);
-        let timeUntil = targetTime.getTime() - Date.now();
-        setTimeout(() => PostNextMessage(lastShopId, newShopId), timeUntil + 1000);
-        setTimeout(() => FortniteAPI.refreshLoginToken(), timeUntil - 8000);
-        setTimeout(() => UpdateLocale(), timeUntil - 60000);
-    });
+        // Refresh login token - 10 seconds before shop
+        AddEventToQueue(() => {
+            FortniteAPI.refreshLoginToken()
+        }, new Date(expiration.getTime() - 10000));
+
+        // Loop waits until shop expires (typically every hour)
+        await WaitUntil(expiration);
+        storeData = await Fortnite.GetStoreData();
+        await PostShopMessage(storeData);
+    }
 }
 
 AddMessageHook('request_image', data => {
@@ -106,7 +140,8 @@ AddMessageHook('request_image', data => {
 
 AddMessageHook('request_refresh', async data => {
     Fortnite.StampedLog("Received request for image");
-    let image = await GetStoreImages(false);
+    let storeData = await Fortnite.GetStoreData();
+    let image = await GetStoreImages(false, storeData);
     let fileName = GetFileName(true);
     fs.writeFileSync("./store_images/v2/" + fileName, image);
     Fortnite.StampedLog("Finished Image Generation");
@@ -117,4 +152,4 @@ AddMessageHook('request_broadcast', data => {
     BroadcastMessage('message_broadcast', data);
 });
 
-QueueNextMessage();
+QueueShopLoop();

@@ -183,9 +183,8 @@ async function CreateImageTile(stData) {
     });
 }
 
-async function GetStoreImages(save) {
+async function GetStoreImages(save, storeData) {
     Fortnite.StampedLog("Starting Image Generation");
-    let storeData = await Fortnite.GetStoreData();
     let storeInfo = Fortnite.GetStoreInfo(storeData);
     Fortnite.StampedLog("Retrieved Store Data");
     let assetList = Fortnite.GetCurrentAssetList();
