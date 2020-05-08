@@ -262,20 +262,24 @@ function GetCurrentAssetList() {
     return JSON.parse(fs.readFileSync('./assets.json'));
 }
 
+function CalculateAssetPrice(storeItem) {
+    let price = 0;
+    if (storeItem.hasOwnProperty('prices') && storeItem.prices.length > 0) {
+        price = storeItem.prices[0].finalPrice;
+    } else if (storeItem.hasOwnProperty('dynamicBundleInfo') && storeItem.dynamicBundleInfo.hasOwnProperty('bundleItems')) {
+        price = storeItem.dynamicBundleInfo.bundleItems.map(v => v.discountedPrice).reduce((acc, v) => acc + v, 0);
+        if (storeItem.dynamicBundleInfo.hasOwnProperty('discountedBasePrice'))
+            price += storeItem.dynamicBundleInfo.discountedBasePrice;
+    }
+    return price;
+}
+
 function GetAssetData(storeItem, save, locales, assetList) {
     try {
         if (storeItem.hasOwnProperty('itemGrants') && storeItem.itemGrants.length > 0) {
-            let price = 0;
-            if (storeItem.hasOwnProperty('prices') && storeItem.prices.length > 0) {
-                price = storeItem.prices[0].finalPrice;
-            } else if (storeItem.hasOwnProperty('dynamicBundleInfo') && storeItem.dynamicBundleInfo.hasOwnProperty('bundleItems')) {
-                price = storeItem.dynamicBundleInfo.bundleItems.map(v => v.discountedPrice).reduce((acc, v) => acc + v, 0);
-                if (storeItem.dynamicBundleInfo.hasOwnProperty('discountedBasePrice'))
-                    price += storeItem.dynamicBundleInfo.discountedBasePrice;
-            }
 
+            let price = CalculateAssetPrice(storeItem);
             let storeObjs = storeItem.itemGrants.map(v => GetAssetItemData(assetList, v.templateId, locales)).filter(v => v);
-
             if (storeObjs.length <= 0 || !storeObjs) throw "No asset found for " + storeItem.devName;
             let storeObj = storeObjs.shift();
             storeObj.price = price;
@@ -295,11 +299,12 @@ function GetAssetData(storeItem, save, locales, assetList) {
         console.log(error);
         let devMatch = /\[VIRTUAL\][1-9]+ x (.+) for/g;
         let result = devMatch.exec(storeItem.devName);
+        let price = CalculateAssetPrice(storeItem);
         return {
             id: 'error_asset',
             imagePath: false,
             displayName: result[1] ? result[1] : storeItem.devName,
-            price: storeItem.prices[0].finalPrice,
+            price: price,
             rarity: 'Uncommon',
         };
     }

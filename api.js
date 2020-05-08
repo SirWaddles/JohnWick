@@ -226,12 +226,15 @@ function getRefreshToken(token) {
             console.error('No access token found while refreshing');
             console.error(r);
         }
-        return {
+        const accessToken = {
             access_token: r.access_token,
             refresh_token: r.refresh_token,
             expires_at: r.expires_at,
             refresh_expires_at: r.refresh_expires_at,
-        }
+        };
+
+        fs.writeFileSync("./login.json", JSON.stringify(accessToken));
+        return accessToken;
     });
 }
 
@@ -274,10 +277,15 @@ async function getLoginToken() {
     Object.assign(cookieObj, loginResult);
     let exchangeResult = await launcherExchange(cookieObj);
     let accessToken = await getExchangeToken(exchangeResult.code);
+
+    fs.writeFileSync("./login.json", JSON.stringify(accessToken));
     return accessToken;
 }
 
 let loginToken = false;
+if (fs.existsSync("./login.json")) {
+    loginToken = JSON.parse(fs.readFileSync("./login.json"));
+}
 
 async function getStoreData(signal) {
     loginToken = await refreshToken(loginToken);
@@ -294,14 +302,14 @@ async function getStoreData(signal) {
     return fetch(FORTNITE_STORE, requestOptions).then(r => r.json());
 }
 
-const MAX_RETRIES = 6;
+const MAX_RETRIES = 20;
 
 async function getStoreDataRetry() {
     // refresh login token so that it doesn't trigger the timeout.
     loginToken = await refreshToken(loginToken);
     for (let i = 0; i < MAX_RETRIES; i++) {
         const controller = new AbortController();
-        const timeout = setTimeout(() => { controller.abort(); }, 3000);
+        const timeout = setTimeout(() => { controller.abort(); }, (i * 1000) + 3000);
         try {
             return await getStoreData(controller.signal);
         } catch (e) {

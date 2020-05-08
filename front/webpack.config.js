@@ -9,7 +9,7 @@ module.exports = {
         filename: 'wick.build.js',
     },
     plugins: [new HtmlWebpackPlugin({
-        title: "John Wick - Shop",
+        title: "Wick Shop Bot",
         meta: {viewport: 'width=device-width, initial-scale=1'}
     })],
     module: {

@@ -61,10 +61,13 @@ async function PostShopMessage(storeData) {
         return;
     }
     lastShopId = newShopId;
-    
+
     Fortnite.StampedLog("Posting shop image");
     let image = await GetStoreImages(true, storeData);
     let fileName = GetFileName();
+    if (fs.existsSync('./store_images/' + fileName)) {
+        fileName = GetFileName(true);
+    }
     fs.writeFileSync('./store_images/' + fileName, image);
     BroadcastMessage('image', fileName);
     Fortnite.StampedLog("Sent shop image to subs");

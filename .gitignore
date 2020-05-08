@@ -13,3 +13,4 @@ store.db
 front/node_modules/
 front/dist/
 series/
+login.json
