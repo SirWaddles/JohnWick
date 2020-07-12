@@ -14,3 +14,4 @@ front/node_modules/
 front/dist/
 series/
 login.json
+fbadeviceauths.json

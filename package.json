@@ -9,6 +9,7 @@
     "abab": "^2.0.0",
     "abort-controller": "^3.0.0",
     "canvas": "^2.5.0",
+    "fortnite-basic-api": "^1.6.1",
     "moment": "^2.23.0",
     "node-fetch": "^2.3.0",
     "node-ipc": "^9.1.1",
