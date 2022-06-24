@@ -11,7 +11,7 @@
     "canvas": "^2.5.0",
     "fortnite-basic-api": "^1.6.1",
     "moment": "^2.23.0",
-    "node-fetch": "^2.3.0",
+    "node-fetch": "^2.6.7",
     "node-ipc": "^9.1.1",
     "node-wick": "^3.0.1",
     "pg": "^7.12.1",
