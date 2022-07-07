@@ -10,7 +10,7 @@
     "abort-controller": "^3.0.0",
     "canvas": "^2.5.0",
     "fortnite-basic-api": "^1.6.1",
-    "moment": "^2.23.0",
+    "moment": "^2.29.4",
     "node-fetch": "^2.3.0",
     "node-ipc": "^9.1.1",
     "node-wick": "^3.0.1",
